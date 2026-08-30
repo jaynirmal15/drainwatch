@@ -1,0 +1,114 @@
+# The drainwatch probe: one Deployment and one Service.
+#
+# `drainwatch run --workload deploy` reads this file and overrides exactly four
+# things per trial: replicas (always 1), terminationGracePeriodSeconds
+# (--grace-period), the container image (--image), and the DRAIN_BEHAVIOR /
+# DRAIN_MAX_SECONDS / EXIT_NOW_FORCE_RST environment variables. Everything else
+# below is what actually runs.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drainwatch-probe
+  labels:
+    app: drainwatch-probe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drainwatch-probe
+  template:
+    metadata:
+      labels:
+        app: drainwatch-probe
+    spec:
+      # Overridden by --grace-period. This is the window the trial measures.
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: probe
+          image: drainwatch-probe:0.1.0
+          # The image is side-loaded into kind by `make probe-image`; there is
+          # no registry to pull from.
+          imagePullPolicy: IfNotPresent
+          args: ["probe"]
+          env:
+            - name: DRAIN_BEHAVIOR
+              value: "drain"
+            - name: DRAIN_MAX_SECONDS
+              value: "25"
+            - name: EXIT_NOW_FORCE_RST
+              value: "true"
+          ports:
+            - name: probe-tcp
+              containerPort: 7001
+              protocol: TCP
+            - name: probe-udp
+              containerPort: 7002
+              protocol: UDP
+            - name: readyz
+              containerPort: 7003
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 7003
+            # One second, one failure. Readiness is deliberately twitchy: the
+            # interval between the probe answering 503 and the EndpointSlice
+            # showing ready:false is one of the numbers being measured, and a
+            # slow readiness probe would hide it behind its own period.
+            periodSeconds: 1
+            timeoutSeconds: 1
+            successThreshold: 1
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 7003
+            # /healthz is unconditionally 200, including during a drain. The
+            # kubelet must never restart the probe in the middle of a measured
+            # termination.
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              memory: 128Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drainwatch-probe
+  labels:
+    app: drainwatch-probe
+spec:
+  type: NodePort
+  selector:
+    app: drainwatch-probe
+  ports:
+    - name: probe-tcp
+      protocol: TCP
+      port: 7001
+      targetPort: 7001
+      nodePort: 30071
+    - name: probe-udp
+      protocol: UDP
+      port: 7002
+      targetPort: 7002
+      nodePort: 30072
+    - name: readyz
+      protocol: TCP
+      port: 7003
+      targetPort: 7003
+      nodePort: 30073

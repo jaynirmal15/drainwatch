@@ -1,0 +1,37 @@
+# A two-node kind cluster for drainwatch.
+#
+# The probe always lands on the worker, because the control-plane node carries
+# the standard NoSchedule taint. The host port mappings therefore live on the
+# worker as well, so the measured path is:
+#
+#   host:7001 -> worker:30071 -> (kube-proxy DNAT) -> probe pod on the same node
+#
+# Putting the mappings on the control-plane node instead would add a second
+# node hop between the client and the pod, which is an extra variable in every
+# flow-outcome measurement.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: drainwatch
+nodes:
+  - role: control-plane
+  - role: worker
+    extraPortMappings:
+      # Probe TCP listener (container port 7001, NodePort 30071).
+      - containerPort: 30071
+        hostPort: 7001
+        listenAddress: "127.0.0.1"
+        protocol: TCP
+      # Probe UDP listener (container port 7002, NodePort 30072).
+      # A missing UDP mapping here is the single most common reason the
+      # udp-flows-replying preflight check fails.
+      - containerPort: 30072
+        hostPort: 7002
+        listenAddress: "127.0.0.1"
+        protocol: UDP
+      # Probe readiness endpoint (container port 7003, NodePort 30073).
+      # Exposed for manual inspection; drainwatch itself reads readiness through
+      # the EndpointSlice watch, not by polling this port.
+      - containerPort: 30073
+        hostPort: 7003
+        listenAddress: "127.0.0.1"
+        protocol: TCP
