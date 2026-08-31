@@ -6,7 +6,11 @@
 
 SHELL := /bin/bash
 
-VERSION     ?= 0.1.0
+# VERSION comes from the nearest annotated tag, so a tagged build reports the
+# tag rather than a string someone remembered to bump. Untagged checkouts fall
+# back to the development version.
+GIT_TAG     := $(shell git describe --tags --abbrev=0 2>/dev/null)
+VERSION     ?= $(if $(GIT_TAG),$(patsubst v%,%,$(GIT_TAG)),0.1.0-dev)
 GIT_COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 GIT_DIRTY   := $(shell test -n "$$(git status --porcelain 2>/dev/null)" && echo "-dirty" || echo "")
 COMMIT      := $(GIT_COMMIT)$(GIT_DIRTY)
