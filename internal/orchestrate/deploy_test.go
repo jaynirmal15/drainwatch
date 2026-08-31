@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/jaynirmal15/drainwatch/internal/probe"
+	"github.com/jaynirmal15/drainwatch/internal/report"
 )
 
 const repoManifest = "../../deploy/manifests/probe.yaml"
@@ -184,5 +185,51 @@ func TestProbeWorkloadRemnantsReportsBothBlockers(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Errorf("a clean namespace must report no blockers, got %v", got)
+	}
+}
+
+// TestDefaultProbeImageTagDoesNotTrackTheBuildVersion.
+//
+// The image tag used to be "drainwatch-probe:" + report.Version. Once the
+// version became `git describe`, it moved with every commit, so the
+// orchestrator asked for a tag that only existed if the image had been rebuilt
+// at exactly that commit. When it had not, the pod sat in ImagePullBackOff
+// trying to pull a local-only tag from Docker Hub and the trial died in
+// preflight. This pins the two apart.
+func TestDefaultProbeImageTagDoesNotTrackTheBuildVersion(t *testing.T) {
+	if DefaultProbeImage != "drainwatch-probe:0.1.0" {
+		t.Errorf("DefaultProbeImage = %q, want a stable tag", DefaultProbeImage)
+	}
+	if strings.Contains(DefaultProbeImage, report.Version) && report.Version != "0.1.0" {
+		t.Errorf("DefaultProbeImage %q embeds the build version %q; the tag must not move with the build",
+			DefaultProbeImage, report.Version)
+	}
+	// A describe-style version must never leak into the tag.
+	for _, marker := range []string{"-g", "-dirty", "-dev"} {
+		if strings.Contains(DefaultProbeImage, marker) {
+			t.Errorf("DefaultProbeImage %q contains build-provenance marker %q", DefaultProbeImage, marker)
+		}
+	}
+}
+
+// TestMutateDeploymentUsesTheDefaultImageWhenNoneGiven guards the other half:
+// an empty --image must leave the manifest's image alone rather than blanking
+// it.
+func TestMutateDeploymentUsesTheDefaultImageWhenNoneGiven(t *testing.T) {
+	m, err := loadManifest(repoManifest)
+	if err != nil {
+		t.Fatalf("loadManifest: %v", err)
+	}
+	dep := m.Deployment.DeepCopy()
+	manifestImage := dep.Spec.Template.Spec.Containers[0].Image
+	if err := mutateDeployment(dep, deployOptions{}); err != nil {
+		t.Fatalf("mutateDeployment: %v", err)
+	}
+	if got := dep.Spec.Template.Spec.Containers[0].Image; got != manifestImage {
+		t.Errorf("image = %q, want the manifest's %q left untouched", got, manifestImage)
+	}
+	if manifestImage != DefaultProbeImage {
+		t.Errorf("the manifest ships %q but the CLI default is %q; they must agree or a plain `kubectl apply` deploys a different image than `drainwatch run`",
+			manifestImage, DefaultProbeImage)
 	}
 }

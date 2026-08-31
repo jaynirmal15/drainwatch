@@ -19,6 +19,18 @@ import (
 // ProbeContainerName is the container the orchestrator streams logs from.
 const ProbeContainerName = "probe"
 
+// DefaultProbeImage is the image `drainwatch run` deploys unless --image says
+// otherwise.
+//
+// Its tag is deliberately NOT the build version. The version string moves with
+// every commit (it is `git describe`), so tying the image tag to it means the
+// orchestrator asks for an image tag that only exists if the image happened to
+// be rebuilt at the identical commit - and when it is not, the pod sits in
+// ImagePullBackOff trying to pull a local-only tag from Docker Hub. The tag is
+// therefore a stable name; which build is inside it is recorded by the probe
+// itself, in its probe_started event.
+const DefaultProbeImage = "drainwatch-probe:0.1.0"
+
 // manifestObjects is the decoded content of deploy/manifests/probe.yaml.
 type manifestObjects struct {
 	Deployment *appsv1.Deployment

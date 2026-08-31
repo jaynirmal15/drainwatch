@@ -31,7 +31,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 CLUSTER="${KIND_CLUSTER:-drainwatch}"
 REPEATS="${REPEATS:-5}"
-DATE="${MATRIX_DATE:-$(date +%F)}"
+DATE="${MATRIX_DATE:-$(date -u +%F)}"  # UTC, to match the timestamps inside the reports
 
 fail() { echo "matrix: $*" >&2; exit 1; }
 

@@ -1,0 +1,22 @@
+Arm A, attempt 1 (2026-08-31T01:54Z) — DISCARDED, not part of the recorded matrix.
+
+Aborted in preflight on trial-001: check "probe-pod-ready" failed after 2m0s
+with the pod in ImagePullBackOff.
+
+Cause, since fixed in code: the orchestrator's --image default was
+"drainwatch-probe:" + the build version. When the build version became
+`git describe` output (commit 0e59101), the version began moving with every
+commit, so `make probe-image` built and loaded "drainwatch-probe:0.1.0-2-g57f5322"
+while the node-side orchestrator asked for "drainwatch-probe:0.1.0". That tag
+exists only locally, so the kubelet tried to pull it from Docker Hub and failed.
+
+Fix: orchestrate.DefaultProbeImage is now a stable tag independent of the build
+version, the Makefile uses the same stable tag, scripts/dwrun.sh derives its
+version the same way the Makefile does, and the probe records its own
+version and commit in its probe_started event so the build inside the image is
+still identifiable. Regression tests:
+TestDefaultProbeImageTagDoesNotTrackTheBuildVersion and
+TestMutateDeploymentUsesTheDefaultImageWhenNoneGiven.
+
+No trial in this attempt produced a usable measurement; the arm was rerun from
+repeat 1. Nothing here is averaged into any reported statistic.

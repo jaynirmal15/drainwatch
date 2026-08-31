@@ -222,7 +222,10 @@ func (s *Server) Run(ctx context.Context) int {
 	s.log.Event(report.ProbeEvent{
 		Event:         EventStarted,
 		DrainBehavior: s.cfg.Behavior,
-		Detail: fmt.Sprintf("instance=%s tcp=%d udp=%d readyz=%d drain_max_seconds=%d exit_now_force_rst=%t",
+		// The probe's own build is recorded here because the image tag is a
+		// stable name and does not identify which build is inside it.
+		Detail: fmt.Sprintf("probe_version=%s probe_commit=%s instance=%s tcp=%d udp=%d readyz=%d drain_max_seconds=%d exit_now_force_rst=%t",
+			report.Version, report.GitCommit,
 			s.cfg.Instance, s.cfg.TCPPort, s.cfg.UDPPort, s.cfg.ReadyPort, s.cfg.DrainMaxSeconds, s.cfg.ExitNowForceRST),
 	})
 

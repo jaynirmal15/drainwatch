@@ -21,7 +21,11 @@ MODULE      := github.com/jaynirmal15/drainwatch
 LDFLAGS     := -X $(MODULE)/internal/report.Version=$(VERSION) -X $(MODULE)/internal/report.GitCommit=$(COMMIT)
 
 BIN         := bin/drainwatch
-IMAGE       := drainwatch-probe:$(VERSION)
+# The image tag is stable and independent of VERSION; see DefaultProbeImage in
+# internal/orchestrate. The build inside the image is stamped via ldflags and
+# reported by the probe at startup.
+IMAGE_TAG   ?= 0.1.0
+IMAGE       := drainwatch-probe:$(IMAGE_TAG)
 KIND_CLUSTER := drainwatch
 KIND_CONFIG := deploy/kind/kind-config.yaml
 OUT         ?= out

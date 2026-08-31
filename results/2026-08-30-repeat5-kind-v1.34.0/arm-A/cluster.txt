@@ -1,9 +1,0 @@
-arm: A
-drain_behavior: exit-now
-trigger: delete
-repeats: 5
-cluster_name: drainwatch
-cluster_created_utc: 2026-08-31T01:46:41Z
-cluster_create_seconds: 103
-kind_version: kind v0.30.0 go1.24.6 darwin/amd64
-drainwatch_version: v0.1.0

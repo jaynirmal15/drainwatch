@@ -103,7 +103,7 @@ func cmdRun(args []string) int {
 	fs.StringVar(&o.Context, "context", "", "kubeconfig context to use (default: the current context)")
 	fs.StringVar(&o.Namespace, "namespace", "drainwatch", "namespace to deploy the probe into; created if absent")
 	fs.StringVar(&o.ManifestPath, "manifest", filepath.Join("deploy", "manifests", "probe.yaml"), "path to the probe Deployment+Service manifest")
-	fs.StringVar(&o.Image, "image", "drainwatch-probe:"+report.Version, "probe container image")
+	fs.StringVar(&o.Image, "image", orchestrate.DefaultProbeImage, "probe container image")
 	fs.StringVar(&o.Workload, "workload", orchestrate.WorkloadDeploy, "deploy | attach (attach is not implemented in v0.1)")
 	fs.StringVar(&o.Trigger, "trigger", orchestrate.TriggerDelete, "delete | evict | scale")
 	fs.StringVar(&o.DrainBehavior, "drain-behavior", probe.BehaviorDrain, "drain | exit-now | ignore (sets DRAIN_BEHAVIOR on the probe)")

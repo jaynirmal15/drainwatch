@@ -70,7 +70,7 @@ docker inspect "$WORKER" >/dev/null 2>&1 || fail "container $WORKER does not exi
 # your machine is not.
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
   -trimpath -tags netgo,osusergo \
-  -ldflags "-X github.com/jaynirmal15/drainwatch/internal/report.Version=${VERSION:-0.1.0} -X github.com/jaynirmal15/drainwatch/internal/report.GitCommit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" \
+  -ldflags "-X github.com/jaynirmal15/drainwatch/internal/report.Version=${VERSION:-$(git describe --tags 2>/dev/null | sed 's/^v//' || echo 0.1.0-dev)} -X github.com/jaynirmal15/drainwatch/internal/report.GitCommit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" \
   -o bin/drainwatch-linux ./cmd/drainwatch
 
 # The node needs credentials pointing at the API server's address on the kind
