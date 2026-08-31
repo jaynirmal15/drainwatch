@@ -147,20 +147,34 @@ func RenderMatrix(w io.Writer, arms []*ArmAggregate) {
 	}
 	tw.Flush()
 
-	var flagged []*ArmAggregate
+	var flagged, varied []*ArmAggregate
 	for _, a := range arms {
 		if a.HasDisagreements {
 			flagged = append(flagged, a)
 		}
+		if a.HasMechanismVariation {
+			varied = append(varied, a)
+		}
 	}
+
 	if len(flagged) == 0 {
-		fmt.Fprintln(w, "\n  every arm's repeats agree internally")
-		return
+		fmt.Fprintln(w, "\n  every arm's repeats agree on outcome counts, exit code, configuration and environment")
+	} else {
+		fmt.Fprintf(w, "\n  !! %d ARM(S) HAVE REPEATS THAT DISAGREE - their statistics above are not trustworthy\n", len(flagged))
+		for _, a := range flagged {
+			for _, d := range a.Disagreements {
+				fmt.Fprintf(w, "  !!   arm %s: %s\n", a.Arm, d)
+			}
+		}
 	}
-	fmt.Fprintf(w, "\n  !! %d ARM(S) HAVE REPEATS THAT DISAGREE\n", len(flagged))
-	for _, a := range flagged {
-		for _, d := range a.Disagreements {
-			fmt.Fprintf(w, "  !!   arm %s: %s\n", a.Arm, d)
+
+	if len(varied) > 0 {
+		fmt.Fprintf(w, "\n  NOTE: %d arm(s) reached identical outcomes by different routes between repeats.\n", len(varied))
+		fmt.Fprintln(w, "  NOTE: this qualifies what the outcome column means; it does not invalidate the intervals.")
+		for _, a := range varied {
+			for _, m := range a.MechanismVariations {
+				fmt.Fprintf(w, "  NOTE:   arm %s: %s\n", a.Arm, m)
+			}
 		}
 	}
 }

@@ -1,0 +1,159 @@
+{
+  "drainwatch_version": "0.1.0-5-gc7b7e94",
+  "git_commit": "c7b7e94",
+  "environment": {
+    "kubernetes_version": "v1.34.0",
+    "node_count": 2,
+    "nodes": [
+      {
+        "name": "drainwatch-control-plane",
+        "container_runtime": "containerd://2.1.3",
+        "kubelet_version": "v1.34.0",
+        "os_image": "Debian GNU/Linux 12 (bookworm)",
+        "architecture": "amd64"
+      },
+      {
+        "name": "drainwatch-worker",
+        "container_runtime": "containerd://2.1.3",
+        "kubelet_version": "v1.34.0",
+        "os_image": "Debian GNU/Linux 12 (bookworm)",
+        "architecture": "amd64"
+      }
+    ],
+    "kube_proxy_mode": "iptables",
+    "cni": "kindnet (identified by DaemonSet name; best effort)",
+    "drainwatch_version": "0.1.0-5-gc7b7e94",
+    "git_commit": "c7b7e94",
+    "os": "linux",
+    "arch": "amd64",
+    "wall_clock_start": "2026-08-31T02:40:25.695586991Z",
+    "warnings": []
+  },
+  "trials": [
+    {
+      "trial_id": "trial-001",
+      "report_path": "/out/arm-E/trial-001/report.json",
+      "drain_behavior": "drain",
+      "trigger": "scale",
+      "tcp": {
+        "total": 10,
+        "drained": 10,
+        "severed": 0,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "trigger_to_sigterm_ms": 151,
+      "sigterm_to_ready_false_ms": -12,
+      "sigterm_to_last_flow_terminal_ms": 25754
+    },
+    {
+      "trial_id": "trial-002",
+      "report_path": "/out/arm-E/trial-002/report.json",
+      "drain_behavior": "drain",
+      "trigger": "scale",
+      "tcp": {
+        "total": 10,
+        "drained": 10,
+        "severed": 0,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "trigger_to_sigterm_ms": 62,
+      "sigterm_to_ready_false_ms": -3,
+      "sigterm_to_last_flow_terminal_ms": 25354
+    },
+    {
+      "trial_id": "trial-003",
+      "report_path": "/out/arm-E/trial-003/report.json",
+      "drain_behavior": "drain",
+      "trigger": "scale",
+      "tcp": {
+        "total": 10,
+        "drained": 10,
+        "severed": 0,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "trigger_to_sigterm_ms": 47,
+      "sigterm_to_ready_false_ms": -9,
+      "sigterm_to_last_flow_terminal_ms": 25366
+    },
+    {
+      "trial_id": "trial-004",
+      "report_path": "/out/arm-E/trial-004/report.json",
+      "drain_behavior": "drain",
+      "trigger": "scale",
+      "tcp": {
+        "total": 10,
+        "drained": 10,
+        "severed": 0,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "trigger_to_sigterm_ms": 56,
+      "sigterm_to_ready_false_ms": -6,
+      "sigterm_to_last_flow_terminal_ms": 25362
+    },
+    {
+      "trial_id": "trial-005",
+      "report_path": "/out/arm-E/trial-005/report.json",
+      "drain_behavior": "drain",
+      "trigger": "scale",
+      "tcp": {
+        "total": 10,
+        "drained": 10,
+        "severed": 0,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "trigger_to_sigterm_ms": 73,
+      "sigterm_to_ready_false_ms": -3,
+      "sigterm_to_last_flow_terminal_ms": 25834
+    }
+  ]
+}

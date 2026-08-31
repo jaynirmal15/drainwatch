@@ -1,0 +1,223 @@
+ARM A  behavior=exit-now  trigger=delete  grace=30s  repeats=5
+  v1.34.0  |  kindnet (identified by DaemonSet name; best effort)  |  kube-proxy iptables  |  10 flows tcp / 10 udp
+------------------------------------------------------------------------------
+  all 5 repeats agree on outcome counts, exit code, configuration and environment
+
+  NOTE: the repeats agree on outcomes but reached them by different routes.
+  NOTE: the intervals below remain comparable; the severance mechanism is itself a result.
+  NOTE:   trial-003 UDP severance route differs from trial-001: "econnrefused (icmp port unreachable) + udp silence" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+
+  PER-REPEAT OUTCOMES
+    TRIAL      TCP (d/s/rt/sw/nm)  UDP (d/s/rt/sw/nm)  EXIT  TCP MECHANISM  UDP MECHANISM
+    trial-001  0/10/0/0/0          0/10/0/0/0          0     econnreset     econnrefused (icmp port unreachable), rehomed onto a different probe instance
+    trial-002  0/10/0/0/0          0/10/0/0/0          0     econnreset     econnrefused (icmp port unreachable), rehomed onto a different probe instance
+    trial-003  0/10/0/0/0          0/10/0/0/0          0     econnreset     econnrefused (icmp port unreachable), udp silence
+    trial-004  0/10/0/0/0          0/10/0/0/0          0     econnreset     econnrefused (icmp port unreachable), rehomed onto a different probe instance
+    trial-005  0/10/0/0/0          0/10/0/0/0          0     econnreset     econnrefused (icmp port unreachable), rehomed onto a different probe instance
+    legend: d=drained s=severed rt=read-timeout sw=survived-window nm=not-measured
+
+  SAME-CLOCK INTERVALS (exact relative to the trigger; k8s endpoints are receipt times)
+    METRIC                               MEDIAN (MIN-MAX)  N  NOT-MEASURED
+    trigger_to_first_tcp_terminal_ms     58 (34-120)       5  0
+    trigger_to_last_tcp_terminal_ms      69 (39-121)       5  0
+    trigger_to_first_udp_terminal_ms     418 (281-447)     5  0
+    trigger_to_last_udp_terminal_ms      2434 (1394-3447)  5  0
+    trigger_to_endpoint_removed_ms       584 (487-908)     5  0
+    trigger_to_container_terminated_ms   577 (482-889)     5  0
+    tcp_dead_before_endpoint_removed_ms  545 (418-787)     5  0
+
+  CROSS-CLOCK INTERVALS (probe wall clock vs orchestrator wall clock)
+    METRIC                          MEDIAN (MIN-MAX)  N  NOT-MEASURED
+    trigger_to_sigterm_ms           57 (34-117)       5  0
+    sigterm_to_ready_false_ms       -14 (-17--5)      5  0
+    sigterm_to_endpoint_removed_ms  548 (430-791)     5  0
+    caveat: one endpoint is the probe's wall clock and the other the
+    orchestrator's, with no synchronisation between them; read these as
+    accurate to tens of milliseconds, and read a small negative value as
+    'within skew of simultaneous' rather than as a reversal of order
+
+  CONTAINER EXIT CODES
+    0              5 of 5 repeats
+
+ARM B  behavior=drain  trigger=delete  grace=30s  repeats=5
+  v1.34.0  |  kindnet (identified by DaemonSet name; best effort)  |  kube-proxy iptables  |  10 flows tcp / 10 udp
+------------------------------------------------------------------------------
+  all 5 repeats agree on outcome counts, exit code, configuration and environment
+
+  PER-REPEAT OUTCOMES
+    TRIAL      TCP (d/s/rt/sw/nm)  UDP (d/s/rt/sw/nm)  EXIT  TCP MECHANISM                 UDP MECHANISM
+    trial-001  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-002  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-003  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-004  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-005  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    legend: d=drained s=severed rt=read-timeout sw=survived-window nm=not-measured
+
+  SAME-CLOCK INTERVALS (exact relative to the trigger; k8s endpoints are receipt times)
+    METRIC                               MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_first_tcp_terminal_ms     25038 (25030-25184)  5  0
+    trigger_to_last_tcp_terminal_ms      25040 (25032-25186)  5  0
+    trigger_to_first_udp_terminal_ms     2419 (2390-2423)     5  0
+    trigger_to_last_udp_terminal_ms      2419 (2401-2425)     5  0
+    trigger_to_endpoint_removed_ms       25642 (25298-28097)  5  0
+    trigger_to_container_terminated_ms   25627 (25289-28077)  5  0
+    tcp_dead_before_endpoint_removed_ms  602 (259-2980)       5  0
+
+  CROSS-CLOCK INTERVALS (probe wall clock vs orchestrator wall clock)
+    METRIC                          MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_sigterm_ms           36 (29-182)          5  0
+    sigterm_to_ready_false_ms       -8 (-77-2)           5  0
+    sigterm_to_endpoint_removed_ms  25607 (25262-28059)  5  0
+    caveat: one endpoint is the probe's wall clock and the other the
+    orchestrator's, with no synchronisation between them; read these as
+    accurate to tens of milliseconds, and read a small negative value as
+    'within skew of simultaneous' rather than as a reversal of order
+
+  CONTAINER EXIT CODES
+    0              5 of 5 repeats
+
+ARM C  behavior=ignore  trigger=delete  grace=30s  repeats=5
+  v1.34.0  |  kindnet (identified by DaemonSet name; best effort)  |  kube-proxy iptables  |  10 flows tcp / 10 udp
+------------------------------------------------------------------------------
+  all 5 repeats agree on outcome counts, exit code, configuration and environment
+
+  NOTE: the repeats agree on outcomes but reached them by different routes.
+  NOTE: the intervals below remain comparable; the severance mechanism is itself a result.
+  NOTE:   trial-002 UDP severance route differs from trial-001: "rehomed onto a different probe instance" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+  NOTE:   trial-003 UDP severance route differs from trial-001: "rehomed onto a different probe instance" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+  NOTE:   trial-004 UDP severance route differs from trial-001: "rehomed onto a different probe instance" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+
+  PER-REPEAT OUTCOMES
+    TRIAL      TCP (d/s/rt/sw/nm)  UDP (d/s/rt/sw/nm)  EXIT  TCP MECHANISM                   UDP MECHANISM
+    trial-001  0/10/0/0/0          0/10/0/0/0          137   eof-without-drain-announcement  econnrefused (icmp port unreachable), rehomed onto a different probe instance
+    trial-002  0/10/0/0/0          0/10/0/0/0          137   eof-without-drain-announcement  rehomed onto a different probe instance
+    trial-003  0/10/0/0/0          0/10/0/0/0          137   eof-without-drain-announcement  rehomed onto a different probe instance
+    trial-004  0/10/0/0/0          0/10/0/0/0          137   eof-without-drain-announcement  rehomed onto a different probe instance
+    trial-005  0/10/0/0/0          0/10/0/0/0          137   eof-without-drain-announcement  econnrefused (icmp port unreachable), rehomed onto a different probe instance
+    legend: d=drained s=severed rt=read-timeout sw=survived-window nm=not-measured
+
+  SAME-CLOCK INTERVALS (exact relative to the trigger; k8s endpoints are receipt times)
+    METRIC                               MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_first_tcp_terminal_ms     30121 (30069-30173)  5  0
+    trigger_to_last_tcp_terminal_ms      30122 (30070-30174)  5  0
+    trigger_to_first_udp_terminal_ms     30412 (30402-30420)  5  0
+    trigger_to_last_udp_terminal_ms      30421 (30402-30907)  5  0
+    trigger_to_endpoint_removed_ms       30537 (30442-30917)  5  0
+    trigger_to_container_terminated_ms   30526 (30426-30905)  5  0
+    tcp_dead_before_endpoint_removed_ms  464 (268-771)        5  0
+
+  CROSS-CLOCK INTERVALS (probe wall clock vs orchestrator wall clock)
+    METRIC                          MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_sigterm_ms           55 (38-122)          5  0
+    sigterm_to_ready_false_ms       -14 (-57-121)        5  0
+    sigterm_to_endpoint_removed_ms  30498 (30320-30811)  5  0
+    caveat: one endpoint is the probe's wall clock and the other the
+    orchestrator's, with no synchronisation between them; read these as
+    accurate to tens of milliseconds, and read a small negative value as
+    'within skew of simultaneous' rather than as a reversal of order
+
+  CONTAINER EXIT CODES
+    137            5 of 5 repeats
+
+ARM D  behavior=drain  trigger=evict  grace=30s  repeats=5
+  v1.34.0  |  kindnet (identified by DaemonSet name; best effort)  |  kube-proxy iptables  |  10 flows tcp / 10 udp
+------------------------------------------------------------------------------
+  all 5 repeats agree on outcome counts, exit code, configuration and environment
+
+  PER-REPEAT OUTCOMES
+    TRIAL      TCP (d/s/rt/sw/nm)  UDP (d/s/rt/sw/nm)  EXIT  TCP MECHANISM                 UDP MECHANISM
+    trial-001  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-002  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-003  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-004  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    trial-005  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  rehomed onto a different probe instance
+    legend: d=drained s=severed rt=read-timeout sw=survived-window nm=not-measured
+
+  SAME-CLOCK INTERVALS (exact relative to the trigger; k8s endpoints are receipt times)
+    METRIC                               MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_first_tcp_terminal_ms     25143 (25048-26168)  5  0
+    trigger_to_last_tcp_terminal_ms      25145 (25052-26174)  5  0
+    trigger_to_first_udp_terminal_ms     2869 (2400-4745)     5  0
+    trigger_to_last_udp_terminal_ms      2869 (2401-4745)     5  0
+    trigger_to_endpoint_removed_ms       25597 (25420-26968)  5  0
+    trigger_to_container_terminated_ms   25582 (25411-26948)  5  0
+    tcp_dead_before_endpoint_removed_ms  487 (335-916)        5  0
+
+  CROSS-CLOCK INTERVALS (probe wall clock vs orchestrator wall clock)
+    METRIC                          MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_sigterm_ms           142 (44-1156)        5  0
+    sigterm_to_ready_false_ms       -43 (-174--4)        5  0
+    sigterm_to_endpoint_removed_ms  25495 (25338-25919)  5  0
+    caveat: one endpoint is the probe's wall clock and the other the
+    orchestrator's, with no synchronisation between them; read these as
+    accurate to tens of milliseconds, and read a small negative value as
+    'within skew of simultaneous' rather than as a reversal of order
+
+  CONTAINER EXIT CODES
+    0              5 of 5 repeats
+
+ARM E  behavior=drain  trigger=scale  grace=30s  repeats=5
+  v1.34.0  |  kindnet (identified by DaemonSet name; best effort)  |  kube-proxy iptables  |  10 flows tcp / 10 udp
+------------------------------------------------------------------------------
+  all 5 repeats agree on outcome counts, exit code, configuration and environment
+
+  PER-REPEAT OUTCOMES
+    TRIAL      TCP (d/s/rt/sw/nm)  UDP (d/s/rt/sw/nm)  EXIT  TCP MECHANISM                 UDP MECHANISM
+    trial-001  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  econnrefused (icmp port unreachable)
+    trial-002  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  econnrefused (icmp port unreachable)
+    trial-003  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  econnrefused (icmp port unreachable)
+    trial-004  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  econnrefused (icmp port unreachable)
+    trial-005  10/0/0/0/0          0/10/0/0/0          0     fin after drain announcement  econnrefused (icmp port unreachable)
+    legend: d=drained s=severed rt=read-timeout sw=survived-window nm=not-measured
+
+  SAME-CLOCK INTERVALS (exact relative to the trigger; k8s endpoints are receipt times)
+    METRIC                               MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_first_tcp_terminal_ms     25064 (25048-25152)  5  0
+    trigger_to_last_tcp_terminal_ms      25065 (25050-25154)  5  0
+    trigger_to_first_udp_terminal_ms     25412 (25404-25418)  5  0
+    trigger_to_last_udp_terminal_ms      25418 (25413-25907)  5  0
+    trigger_to_endpoint_removed_ms       25341 (25304-25811)  5  0
+    trigger_to_container_terminated_ms   25330 (25293-25799)  5  0
+    tcp_dead_before_endpoint_removed_ms  291 (239-733)        5  0
+
+  CROSS-CLOCK INTERVALS (probe wall clock vs orchestrator wall clock)
+    METRIC                          MEDIAN (MIN-MAX)     N  NOT-MEASURED
+    trigger_to_sigterm_ms           62 (47-151)          5  0
+    sigterm_to_ready_false_ms       -6 (-12--3)          5  0
+    sigterm_to_endpoint_removed_ms  25294 (25242-25738)  5  0
+    caveat: one endpoint is the probe's wall clock and the other the
+    orchestrator's, with no synchronisation between them; read these as
+    accurate to tens of milliseconds, and read a small negative value as
+    'within skew of simultaneous' rather than as a reversal of order
+
+  CONTAINER EXIT CODES
+    0              5 of 5 repeats
+
+MATRIX  (values are median (min-max) in ms across repeats)
+==============================================================================
+  ARM  BEHAVIOR  TRIGGER  N  TCP            UDP            FIRST TCP END*       LAST TCP END*        ENDPOINT GONE*       CONTAINER EXIT*      EXIT CODE
+  A    exit-now  delete   5  10/10 severed  10/10 severed  58 (34-120)          69 (39-121)          584 (487-908)        577 (482-889)        0
+  B    drain     delete   5  10/10 drained  10/10 severed  25038 (25030-25184)  25040 (25032-25186)  25642 (25298-28097)  25627 (25289-28077)  0
+  C    ignore    delete   5  10/10 severed  10/10 severed  30121 (30069-30173)  30122 (30070-30174)  30537 (30442-30917)  30526 (30426-30905)  137
+  D    drain     evict    5  10/10 drained  10/10 severed  25143 (25048-26168)  25145 (25052-26174)  25597 (25420-26968)  25582 (25411-26948)  0
+  E    drain     scale    5  10/10 drained  10/10 severed  25064 (25048-25152)  25065 (25050-25154)  25341 (25304-25811)  25330 (25293-25799)  0
+  * same-clock: exact relative to the trigger
+
+  CROSS-CLOCK COLUMNS (probe wall clock vs orchestrator wall clock; tens of ms, not sub-ms)
+  ARM  TRIGGER->SIGTERM  SIGTERM->READY:FALSE  SIGTERM->ENDPOINT GONE
+  A    57 (34-117)       -14 (-17--5)          548 (430-791)
+  B    36 (29-182)       -8 (-77-2)            25607 (25262-28059)
+  C    55 (38-122)       -14 (-57-121)         30498 (30320-30811)
+  D    142 (44-1156)     -43 (-174--4)         25495 (25338-25919)
+  E    62 (47-151)       -6 (-12--3)           25294 (25242-25738)
+
+  every arm's repeats agree on outcome counts, exit code, configuration and environment
+
+  NOTE: 2 arm(s) reached identical outcomes by different routes between repeats.
+  NOTE: this qualifies what the outcome column means; it does not invalidate the intervals.
+  NOTE:   arm A: trial-003 UDP severance route differs from trial-001: "econnrefused (icmp port unreachable) + udp silence" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+  NOTE:   arm C: trial-002 UDP severance route differs from trial-001: "rehomed onto a different probe instance" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+  NOTE:   arm C: trial-003 UDP severance route differs from trial-001: "rehomed onto a different probe instance" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+  NOTE:   arm C: trial-004 UDP severance route differs from trial-001: "rehomed onto a different probe instance" vs "econnrefused (icmp port unreachable) + rehomed onto a different probe instance"
+
+aggregate written to results/2026-08-31-repeat5-kind-v1.34.0/aggregate.json
