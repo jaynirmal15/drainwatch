@@ -1,0 +1,560 @@
+{
+  "drainwatch_version": "0.1.0-7-g9fd528d",
+  "git_commit": "9fd528d",
+  "environment": {
+    "kubernetes_version": "v1.34.0",
+    "node_count": 2,
+    "nodes": [
+      {
+        "name": "drainwatch-control-plane",
+        "container_runtime": "containerd://2.1.3",
+        "kubelet_version": "v1.34.0",
+        "os_image": "Debian GNU/Linux 12 (bookworm)",
+        "architecture": "amd64"
+      },
+      {
+        "name": "drainwatch-worker",
+        "container_runtime": "containerd://2.1.3",
+        "kubelet_version": "v1.34.0",
+        "os_image": "Debian GNU/Linux 12 (bookworm)",
+        "architecture": "amd64"
+      }
+    ],
+    "kube_proxy_mode": "iptables",
+    "cni": "kindnet (identified by DaemonSet name; best effort)",
+    "drainwatch_version": "0.1.0-7-g9fd528d",
+    "git_commit": "9fd528d",
+    "os": "linux",
+    "arch": "amd64",
+    "wall_clock_start": "2026-08-31T03:07:53.222252122Z",
+    "warnings": []
+  },
+  "trial": {
+    "id": "trial-005",
+    "config": {
+      "tcp_flows": 10,
+      "udp_flows": 10,
+      "grace_period_seconds": 30,
+      "drain_behavior": "ignore",
+      "drain_max_seconds": 25,
+      "trigger": "delete",
+      "workload": "deploy",
+      "namespace": "drainwatch",
+      "target_host": "127.0.0.1",
+      "tcp_port": 30071,
+      "udp_port": 30072,
+      "settle_seconds": 10,
+      "observe_timeout_seconds": 60,
+      "flow_timeout_seconds": 10,
+      "udp_silence_datagrams": 6
+    },
+    "timeline": [
+      {
+        "t_ms": -13183,
+        "source": "orchestrator",
+        "event": "workload_applied",
+        "detail": "deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s"
+      },
+      {
+        "t_ms": -13177,
+        "source": "k8s",
+        "event": "endpointslice_observed",
+        "detail": "drainwatch-probe-9v6bg endpoints=0"
+      },
+      {
+        "t_ms": -13142,
+        "source": "k8s",
+        "event": "pod_observed",
+        "detail": "drainwatch-probe-65dc9ffcdb-ntmdt phase=Pending"
+      },
+      {
+        "t_ms": -12128,
+        "source": "probe",
+        "event": "probe_started",
+        "detail": "probe_version=0.1.0-7-g9fd528d probe_commit=9fd528d instance=drainwatch-probe-65dc9ffcdb-ntmdt tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true",
+        "approximate": true
+      },
+      {
+        "t_ms": -12124,
+        "source": "probe",
+        "event": "listening",
+        "detail": "tcp=:7001 udp=:7002 readyz=:7003",
+        "approximate": true
+      },
+      {
+        "t_ms": -10015,
+        "source": "orchestrator",
+        "event": "preflight_passed",
+        "detail": "10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering"
+      },
+      {
+        "t_ms": -10014,
+        "source": "orchestrator",
+        "event": "probe_log_stream_opened",
+        "detail": "following container probe of pod drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "t_ms": 0,
+        "source": "orchestrator",
+        "event": "settle_complete",
+        "detail": "held 10 tcp and 10 udp flows for 10s with no flow terminating"
+      },
+      {
+        "t_ms": 0,
+        "source": "orchestrator",
+        "event": "trigger_issued",
+        "detail": "trigger=delete target=drainwatch/drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "t_ms": 11,
+        "source": "orchestrator",
+        "event": "trigger_api_returned",
+        "detail": "api call returned success"
+      },
+      {
+        "t_ms": 14,
+        "source": "k8s",
+        "event": "pod_deletion_timestamp_set",
+        "detail": "drainwatch-probe-65dc9ffcdb-ntmdt deletionGracePeriodSeconds=30"
+      },
+      {
+        "t_ms": 42,
+        "source": "k8s",
+        "event": "endpointslice_ready_false",
+        "detail": "Pod/drainwatch-probe-65dc9ffcdb-ntmdt in drainwatch-probe-9v6bg (terminating=true) serving=true"
+      },
+      {
+        "t_ms": 55,
+        "source": "k8s",
+        "event": "pod_observed",
+        "detail": "drainwatch-probe-65dc9ffcdb-l4lwx phase=Pending"
+      },
+      {
+        "t_ms": 59,
+        "source": "probe",
+        "event": "sigterm_ignored",
+        "detail": "continuing to serve; readiness remains 200; waiting for SIGKILL at the grace-period boundary",
+        "approximate": true
+      },
+      {
+        "t_ms": 59,
+        "source": "probe",
+        "event": "sigterm_received",
+        "detail": "signal=terminated",
+        "approximate": true
+      },
+      {
+        "t_ms": 33259,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0010",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33261,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0006",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33261,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0007",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33261,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0008",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33261,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0009",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33262,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0001",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33262,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0002",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33262,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0003",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33262,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0004",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33262,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0005",
+        "detail": "severed: eof-without-drain-announcement"
+      },
+      {
+        "t_ms": 33479,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0006",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 33483,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0002",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 33490,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0005",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 33490,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0008",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 33497,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0007",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 33499,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0009",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 33667,
+        "source": "k8s",
+        "event": "pod_ready_false",
+        "detail": "drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "t_ms": 34936,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0001",
+        "detail": "severed: econnrefused (icmp port unreachable)"
+      },
+      {
+        "t_ms": 35436,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0003",
+        "detail": "severed: answered by probe instance drainwatch-probe-65dc9ffcdb-l4lwx, was drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "t_ms": 35436,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0004",
+        "detail": "severed: answered by probe instance drainwatch-probe-65dc9ffcdb-l4lwx, was drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "t_ms": 35436,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0010",
+        "detail": "severed: answered by probe instance drainwatch-probe-65dc9ffcdb-l4lwx, was drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "t_ms": 35450,
+        "source": "orchestrator",
+        "event": "all_flows_terminal",
+        "detail": "all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events"
+      },
+      {
+        "t_ms": 35769,
+        "source": "k8s",
+        "event": "container_terminated",
+        "detail": "probe exitCode=137 reason=Error signal=0 finishedAt=2026-08-31T03:14:08Z"
+      },
+      {
+        "t_ms": 35786,
+        "source": "k8s",
+        "event": "endpointslice_endpoint_removed",
+        "detail": "Pod/drainwatch-probe-65dc9ffcdb-ntmdt removed from drainwatch-probe-9v6bg"
+      },
+      {
+        "t_ms": 36604,
+        "source": "k8s",
+        "event": "pod_object_deleted",
+        "detail": "drainwatch-probe-65dc9ffcdb-ntmdt removed from the API"
+      },
+      {
+        "t_ms": 40539,
+        "source": "orchestrator",
+        "event": "observation_window_closed",
+        "detail": "window=60s; flows still alive at this instant are recorded as survived-observation-window"
+      },
+      {
+        "t_ms": 40541,
+        "source": "orchestrator",
+        "event": "probe_log_stream_ended",
+        "detail": "collected 903 probe events"
+      }
+    ],
+    "flows": [
+      {
+        "id": "tcp-0001",
+        "proto": "tcp",
+        "connected_t_ms": -10570,
+        "outcome": "severed",
+        "t_terminal_ms": 33262,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0002",
+        "proto": "tcp",
+        "connected_t_ms": -10570,
+        "outcome": "severed",
+        "t_terminal_ms": 33262,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0003",
+        "proto": "tcp",
+        "connected_t_ms": -10569,
+        "outcome": "severed",
+        "t_terminal_ms": 33262,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0004",
+        "proto": "tcp",
+        "connected_t_ms": -10569,
+        "outcome": "severed",
+        "t_terminal_ms": 33262,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0005",
+        "proto": "tcp",
+        "connected_t_ms": -10569,
+        "outcome": "severed",
+        "t_terminal_ms": 33262,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0006",
+        "proto": "tcp",
+        "connected_t_ms": -10569,
+        "outcome": "severed",
+        "t_terminal_ms": 33261,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32945,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0007",
+        "proto": "tcp",
+        "connected_t_ms": -10569,
+        "outcome": "severed",
+        "t_terminal_ms": 33261,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0008",
+        "proto": "tcp",
+        "connected_t_ms": -10568,
+        "outcome": "severed",
+        "t_terminal_ms": 33261,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0009",
+        "proto": "tcp",
+        "connected_t_ms": -10568,
+        "outcome": "severed",
+        "t_terminal_ms": 33261,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "tcp-0010",
+        "proto": "tcp",
+        "connected_t_ms": -10568,
+        "outcome": "severed",
+        "t_terminal_ms": 33259,
+        "last_heartbeat_seq": 86,
+        "last_data_t_ms": 32947,
+        "detail": "eof-without-drain-announcement"
+      },
+      {
+        "id": "udp-0001",
+        "proto": "udp",
+        "connected_t_ms": -10568,
+        "outcome": "severed",
+        "t_terminal_ms": 34936,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32948,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0002",
+        "proto": "udp",
+        "connected_t_ms": -10568,
+        "outcome": "severed",
+        "t_terminal_ms": 33483,
+        "last_answered_seq": 86,
+        "last_data_t_ms": 32948,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0003",
+        "proto": "udp",
+        "connected_t_ms": -10568,
+        "outcome": "severed",
+        "t_terminal_ms": 35436,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32948,
+        "detail": "answered by probe instance drainwatch-probe-65dc9ffcdb-l4lwx, was drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "id": "udp-0004",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 35436,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32948,
+        "detail": "answered by probe instance drainwatch-probe-65dc9ffcdb-l4lwx, was drainwatch-probe-65dc9ffcdb-ntmdt"
+      },
+      {
+        "id": "udp-0005",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 33490,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32949,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0006",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 33479,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32948,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0007",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 33497,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32948,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0008",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 33490,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32948,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0009",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 33499,
+        "last_answered_seq": 86,
+        "last_data_t_ms": 32949,
+        "detail": "econnrefused (icmp port unreachable)"
+      },
+      {
+        "id": "udp-0010",
+        "proto": "udp",
+        "connected_t_ms": -10567,
+        "outcome": "severed",
+        "t_terminal_ms": 35436,
+        "last_answered_seq": 85,
+        "last_data_t_ms": 32949,
+        "detail": "answered by probe instance drainwatch-probe-65dc9ffcdb-l4lwx, was drainwatch-probe-65dc9ffcdb-ntmdt"
+      }
+    ],
+    "summary": {
+      "tcp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "sigterm_to_ready_false_ms": -17,
+      "sigterm_to_last_flow_terminal_ms": 35377,
+      "trigger_to_sigterm_ms": 59,
+      "trigger_to_endpoint_removed_ms": 35786,
+      "trigger_to_container_terminated_ms": 35769,
+      "notes": [
+        "sigterm_to_ready_false_ms is negative (-17 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM."
+      ]
+    },
+    "clock_note": "t_ms is milliseconds relative to trigger_issued. Events from sources 'orchestrator' and 'client' are taken from a single monotonic clock in the orchestrator process and are exact relative to the trigger. Events from source 'k8s' are stamped with the orchestrator's monotonic clock at the moment the watch event was received, so they include API-server write latency and watch dispatch latency and are an upper bound on when the change actually occurred. Events from source 'probe' are marked approximate: their t_ms is obtained by differencing wall clocks on two different hosts with no synchronisation guarantee, and should be read as accurate to tens of milliseconds, not sub-millisecond.",
+    "probe_clock_offset_note": "Probe timestamps were mapped onto the orchestrator timebase as (probe wall clock - orchestrator wall clock at trigger_issued). Deltas between two probe events are exact because they share the probe's monotonic clock; deltas between a probe event and any other source carry the unmeasured host-to-host clock offset."
+  }
+}

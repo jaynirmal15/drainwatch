@@ -1,0 +1,19 @@
+Interrupted session, 2026-08-31. NOT part of the recorded repeat-5 matrix.
+
+Arms A, B and C completed here (5 trials each, all from commit 9fd528d) and are
+internally consistent. Arm D was interrupted mid-run by the monitoring process
+being killed, and arm E never ran.
+
+These 15 trials are preserved rather than deleted, but they are not used for any
+number in EXPERIMENTS.md, for two reasons:
+
+  1. Completing the matrix would have meant recording arms D and E from a
+     different commit (25759e2) than arms A-C (9fd528d), so the five arms would
+     not have shared one frozen build.
+  2. The recording machine restarted between the two halves, so the Docker VM
+     that would have run D and E was not the one that ran A-C.
+
+Either alone is survivable with a caveat. Together they mean the five arms would
+not have been the same experiment, so the matrix was rerun from scratch against a
+single frozen build in one session. See the sibling dated directory for the
+recorded run.

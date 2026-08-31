@@ -1,0 +1,640 @@
+{
+  "drainwatch_version": "0.1.0-7-g9fd528d",
+  "git_commit": "9fd528d",
+  "environment": {
+    "kubernetes_version": "v1.34.0",
+    "node_count": 2,
+    "nodes": [
+      {
+        "name": "drainwatch-control-plane",
+        "container_runtime": "containerd://2.1.3",
+        "kubelet_version": "v1.34.0",
+        "os_image": "Debian GNU/Linux 12 (bookworm)",
+        "architecture": "amd64"
+      },
+      {
+        "name": "drainwatch-worker",
+        "container_runtime": "containerd://2.1.3",
+        "kubelet_version": "v1.34.0",
+        "os_image": "Debian GNU/Linux 12 (bookworm)",
+        "architecture": "amd64"
+      }
+    ],
+    "kube_proxy_mode": "iptables",
+    "cni": "kindnet (identified by DaemonSet name; best effort)",
+    "drainwatch_version": "0.1.0-7-g9fd528d",
+    "git_commit": "9fd528d",
+    "os": "linux",
+    "arch": "amd64",
+    "wall_clock_start": "2026-08-31T02:56:18.822183004Z",
+    "warnings": []
+  },
+  "trial": {
+    "id": "trial-004",
+    "config": {
+      "tcp_flows": 10,
+      "udp_flows": 10,
+      "grace_period_seconds": 30,
+      "drain_behavior": "exit-now",
+      "drain_max_seconds": 25,
+      "trigger": "delete",
+      "workload": "deploy",
+      "namespace": "drainwatch",
+      "target_host": "127.0.0.1",
+      "tcp_port": 30071,
+      "udp_port": 30072,
+      "settle_seconds": 10,
+      "observe_timeout_seconds": 60,
+      "flow_timeout_seconds": 10,
+      "udp_silence_datagrams": 6
+    },
+    "timeline": [
+      {
+        "t_ms": -13451,
+        "source": "orchestrator",
+        "event": "workload_applied",
+        "detail": "deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s"
+      },
+      {
+        "t_ms": -13444,
+        "source": "k8s",
+        "event": "endpointslice_observed",
+        "detail": "drainwatch-probe-8khkn endpoints=0"
+      },
+      {
+        "t_ms": -13427,
+        "source": "k8s",
+        "event": "pod_observed",
+        "detail": "drainwatch-probe-59ccfb48c9-z4tq8 phase=Pending"
+      },
+      {
+        "t_ms": -11840,
+        "source": "probe",
+        "event": "probe_started",
+        "detail": "probe_version=0.1.0-7-g9fd528d probe_commit=9fd528d instance=drainwatch-probe-59ccfb48c9-z4tq8 tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true",
+        "approximate": true
+      },
+      {
+        "t_ms": -11838,
+        "source": "probe",
+        "event": "listening",
+        "detail": "tcp=:7001 udp=:7002 readyz=:7003",
+        "approximate": true
+      },
+      {
+        "t_ms": -10029,
+        "source": "orchestrator",
+        "event": "preflight_passed",
+        "detail": "10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering"
+      },
+      {
+        "t_ms": -10029,
+        "source": "orchestrator",
+        "event": "probe_log_stream_opened",
+        "detail": "following container probe of pod drainwatch-probe-59ccfb48c9-z4tq8"
+      },
+      {
+        "t_ms": 0,
+        "source": "orchestrator",
+        "event": "settle_complete",
+        "detail": "held 10 tcp and 10 udp flows for 10s with no flow terminating"
+      },
+      {
+        "t_ms": 0,
+        "source": "orchestrator",
+        "event": "trigger_issued",
+        "detail": "trigger=delete target=drainwatch/drainwatch-probe-59ccfb48c9-z4tq8"
+      },
+      {
+        "t_ms": 15,
+        "source": "orchestrator",
+        "event": "trigger_api_returned",
+        "detail": "api call returned success"
+      },
+      {
+        "t_ms": 18,
+        "source": "k8s",
+        "event": "pod_deletion_timestamp_set",
+        "detail": "drainwatch-probe-59ccfb48c9-z4tq8 deletionGracePeriodSeconds=30"
+      },
+      {
+        "t_ms": 32,
+        "source": "k8s",
+        "event": "endpointslice_ready_false",
+        "detail": "Pod/drainwatch-probe-59ccfb48c9-z4tq8 in drainwatch-probe-8khkn (terminating=true) serving=true"
+      },
+      {
+        "t_ms": 37,
+        "source": "k8s",
+        "event": "pod_observed",
+        "detail": "drainwatch-probe-59ccfb48c9-pp652 phase=Pending"
+      },
+      {
+        "t_ms": 83,
+        "source": "probe",
+        "event": "sigterm_received",
+        "detail": "signal=terminated",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0002",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 84,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0003",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 84,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0004",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0003",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0004",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0005",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0008",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0001",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0002",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 84,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0009",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0001",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0005",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0006",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0007",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0008",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0009",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "tcp-0010",
+        "detail": "severed: econnreset"
+      },
+      {
+        "t_ms": 85,
+        "source": "probe",
+        "event": "exiting",
+        "detail": "exit(0) immediately on SIGTERM with 10 established flows",
+        "approximate": true
+      },
+      {
+        "t_ms": 85,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0010",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 85,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0006",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 85,
+        "source": "probe",
+        "event": "tcp_flow_reset_forced",
+        "flow_id": "srv-tcp-0007",
+        "detail": "so_linger=0 close issued by probe (exit-now)",
+        "approximate": true
+      },
+      {
+        "t_ms": 210,
+        "source": "k8s",
+        "event": "pod_ready_false",
+        "detail": "drainwatch-probe-59ccfb48c9-z4tq8"
+      },
+      {
+        "t_ms": 430,
+        "source": "k8s",
+        "event": "container_terminated",
+        "detail": "probe exitCode=0 reason=Completed signal=0 finishedAt=2026-08-31T02:57:50Z"
+      },
+      {
+        "t_ms": 529,
+        "source": "k8s",
+        "event": "endpointslice_endpoint_removed",
+        "detail": "Pod/drainwatch-probe-59ccfb48c9-z4tq8 removed from drainwatch-probe-8khkn"
+      },
+      {
+        "t_ms": 1324,
+        "source": "k8s",
+        "event": "pod_object_deleted",
+        "detail": "drainwatch-probe-59ccfb48c9-z4tq8 removed from the API"
+      },
+      {
+        "t_ms": 3419,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0006",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3419,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0010",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3420,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0003",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3420,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0004",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3420,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0005",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3420,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0007",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3420,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0008",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3420,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0009",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3425,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0001",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3425,
+        "source": "client",
+        "event": "flow_terminal",
+        "flow_id": "udp-0002",
+        "detail": "severed: udp-silence-6-datagrams"
+      },
+      {
+        "t_ms": 3490,
+        "source": "orchestrator",
+        "event": "all_flows_terminal",
+        "detail": "all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events"
+      },
+      {
+        "t_ms": 8580,
+        "source": "orchestrator",
+        "event": "observation_window_closed",
+        "detail": "window=60s; flows still alive at this instant are recorded as survived-observation-window"
+      },
+      {
+        "t_ms": 8581,
+        "source": "orchestrator",
+        "event": "probe_log_stream_ended",
+        "detail": "collected 246 probe events"
+      }
+    ],
+    "flows": [
+      {
+        "id": "tcp-0001",
+        "proto": "tcp",
+        "connected_t_ms": -10588,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0002",
+        "proto": "tcp",
+        "connected_t_ms": -10587,
+        "outcome": "severed",
+        "t_terminal_ms": 84,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -85,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0003",
+        "proto": "tcp",
+        "connected_t_ms": -10587,
+        "outcome": "severed",
+        "t_terminal_ms": 84,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -85,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0004",
+        "proto": "tcp",
+        "connected_t_ms": -10583,
+        "outcome": "severed",
+        "t_terminal_ms": 84,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -85,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0005",
+        "proto": "tcp",
+        "connected_t_ms": -10583,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0006",
+        "proto": "tcp",
+        "connected_t_ms": -10583,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0007",
+        "proto": "tcp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0008",
+        "proto": "tcp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0009",
+        "proto": "tcp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "tcp-0010",
+        "proto": "tcp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 85,
+        "last_heartbeat_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "econnreset"
+      },
+      {
+        "id": "udp-0001",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3425,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0002",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3425,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0003",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3420,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0004",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3420,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0005",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3420,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0006",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3419,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0007",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3420,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0008",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3420,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0009",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3420,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      },
+      {
+        "id": "udp-0010",
+        "proto": "udp",
+        "connected_t_ms": -10582,
+        "outcome": "severed",
+        "t_terminal_ms": 3419,
+        "last_answered_seq": 20,
+        "last_data_t_ms": -81,
+        "detail": "udp-silence-6-datagrams"
+      }
+    ],
+    "summary": {
+      "tcp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "udp": {
+        "total": 10,
+        "drained": 0,
+        "severed": 10,
+        "read_timeout": 0,
+        "survived_window": 0,
+        "not_measured": 0
+      },
+      "sigterm_to_ready_false_ms": -51,
+      "sigterm_to_last_flow_terminal_ms": 3342,
+      "trigger_to_sigterm_ms": 83,
+      "trigger_to_endpoint_removed_ms": 529,
+      "trigger_to_container_terminated_ms": 430,
+      "notes": [
+        "sigterm_to_ready_false_ms is negative (-51 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM."
+      ]
+    },
+    "clock_note": "t_ms is milliseconds relative to trigger_issued. Events from sources 'orchestrator' and 'client' are taken from a single monotonic clock in the orchestrator process and are exact relative to the trigger. Events from source 'k8s' are stamped with the orchestrator's monotonic clock at the moment the watch event was received, so they include API-server write latency and watch dispatch latency and are an upper bound on when the change actually occurred. Events from source 'probe' are marked approximate: their t_ms is obtained by differencing wall clocks on two different hosts with no synchronisation guarantee, and should be read as accurate to tens of milliseconds, not sub-millisecond.",
+    "probe_clock_offset_note": "Probe timestamps were mapped onto the orchestrator timebase as (probe wall clock - orchestrator wall clock at trigger_issued). Deltas between two probe events are exact because they share the probe's monotonic clock; deltas between a probe event and any other source carry the unmeasured host-to-host clock offset."
+  }
+}
