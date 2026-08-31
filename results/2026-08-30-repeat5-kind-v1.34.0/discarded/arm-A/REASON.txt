@@ -20,3 +20,9 @@ TestMutateDeploymentUsesTheDefaultImageWhenNoneGiven.
 
 No trial in this attempt produced a usable measurement; the arm was rerun from
 repeat 1. Nothing here is averaged into any reported statistic.
+
+Postscript: this directory should also contain the arm's cluster.txt and
+run.log, and does not. A second defect, fixed in the same commit: dwrun.sh
+wiped the whole --out directory before copying reports back from the node,
+destroying the files the matrix driver had written alongside them. It now
+replaces only what a run produces.

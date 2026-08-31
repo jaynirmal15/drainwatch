@@ -116,9 +116,13 @@ set -e
 
 # Copy the reports back even when the run failed: a failed run's partial output
 # is still evidence about what went wrong.
-mkdir -p "$(dirname "$OUT_HOST")"
-rm -rf "$OUT_HOST"
-if docker cp "$WORKER":"$OUT_NODE" "$OUT_HOST" >/dev/null 2>&1; then
+# Replace only what this run produces. Wiping the whole directory would destroy
+# anything a caller placed alongside the reports - the matrix driver writes each
+# arm's cluster.txt and tees its run.log there - and those are exactly the files
+# needed to interpret, or to discard, the run.
+mkdir -p "$OUT_HOST"
+rm -rf "$OUT_HOST"/trial-* "$OUT_HOST"/report.json "$OUT_HOST"/summary.json
+if docker cp "$WORKER":"$OUT_NODE/." "$OUT_HOST/" >/dev/null 2>&1; then
   # The orchestrator printed its own paths, which are inside the node. Say where
   # the files actually are on this machine.
   echo
