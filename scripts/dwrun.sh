@@ -89,6 +89,8 @@ docker cp deploy/manifests/probe.yaml "$WORKER":/probe.yaml >/dev/null
 # Translate the caller's --out into a path inside the container, so the reports
 # can be copied back to where the caller expects them.
 OUT_HOST="out"
+# Bash 3.2, which is what macOS ships, treats an empty array as unbound under
+# `set -u`, so every expansion of ARGS below uses the ${a[@]+"${a[@]}"} form.
 ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -108,7 +110,7 @@ docker exec "$WORKER" /drainwatch run \
   --tcp-port "$NODEPORT_TCP" \
   --udp-port "$NODEPORT_UDP" \
   --out "$OUT_NODE" \
-  "${ARGS[@]}"
+  ${ARGS[@]+"${ARGS[@]}"}
 rc=$?
 set -e
 
@@ -116,6 +118,14 @@ set -e
 # is still evidence about what went wrong.
 mkdir -p "$(dirname "$OUT_HOST")"
 rm -rf "$OUT_HOST"
-docker cp "$WORKER":"$OUT_NODE" "$OUT_HOST" >/dev/null 2>&1 || true
+if docker cp "$WORKER":"$OUT_NODE" "$OUT_HOST" >/dev/null 2>&1; then
+  # The orchestrator printed its own paths, which are inside the node. Say where
+  # the files actually are on this machine.
+  echo
+  echo "dwrun: the orchestrator ran inside $WORKER; its output paths above are container paths."
+  echo "dwrun: reports copied to $OUT_HOST/ on this machine."
+else
+  echo "dwrun: WARNING: could not copy $OUT_NODE out of $WORKER; reports remain in the container" >&2
+fi
 
 exit $rc
