@@ -25,8 +25,8 @@ func statValue(s *Stat) string {
 // never combined, because they do not have the same precision and a reader
 // comparing them needs to know which is which.
 func RenderArmAggregate(w io.Writer, a *ArmAggregate) {
-	fmt.Fprintf(w, "ARM %s  behavior=%s  trigger=%s  grace=%ds  repeats=%d\n",
-		a.Arm, a.DrainBehavior, a.Trigger, a.GracePeriodSeconds, a.Trials)
+	fmt.Fprintf(w, "ARM %s  behavior=%s  trigger=%s  grace=%ds  repeats=%d  build=%s\n",
+		a.Arm, a.DrainBehavior, a.Trigger, a.GracePeriodSeconds, a.Trials, a.Build)
 	fmt.Fprintf(w, "  %s  |  %s  |  kube-proxy %s  |  %d flows tcp / %d udp\n",
 		a.Environment.KubernetesVersion, a.Environment.CNI, a.Environment.KubeProxyMode, a.TCPFlows, a.UDPFlows)
 	fmt.Fprintln(w, strings.Repeat("-", 78))
@@ -146,6 +146,32 @@ func RenderMatrix(w io.Writer, arms []*ArmAggregate) {
 			statValue(a.Stat("sigterm_to_endpoint_removed_ms")))
 	}
 	tw.Flush()
+
+	builds := map[string]bool{}
+	dirty := false
+	for _, a := range arms {
+		builds[a.Build.String()] = true
+		if a.Build.Dirty() {
+			dirty = true
+		}
+	}
+	switch {
+	case len(builds) > 1:
+		fmt.Fprintf(w, "\n  !! THESE ARMS WERE NOT PRODUCED BY ONE BUILD (%d distinct):\n", len(builds))
+		for _, a := range arms {
+			fmt.Fprintf(w, "  !!   arm %s: %s\n", a.Arm, a.Build)
+		}
+		fmt.Fprintln(w, "  !! Differences between arms may be differences between binaries.")
+	case dirty:
+		for b := range builds {
+			fmt.Fprintf(w, "\n  !! built from a tree with uncommitted changes: %s\n", b)
+			fmt.Fprintln(w, "  !! the commit does not fully identify the code that produced these numbers.")
+		}
+	default:
+		for b := range builds {
+			fmt.Fprintf(w, "\n  all arms produced by one build: %s\n", b)
+		}
+	}
 
 	var flagged, varied []*ArmAggregate
 	for _, a := range arms {

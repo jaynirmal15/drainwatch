@@ -68,10 +68,21 @@ docker inspect "$WORKER" >/dev/null 2>&1 || fail "container $WORKER does not exi
 
 # The orchestrator must be a Linux binary; the node container is Linux even when
 # your machine is not.
+#
+# DRAINWATCH_LINUX_BIN lets a caller supply one built earlier. An experiment that
+# spans several invocations must freeze its binary once: rebuilding per
+# invocation means a commit landing mid-run silently produces some arms from one
+# binary and some from another, which the aggregator then has to flag as repeats
+# that are not the same experiment.
+if [ -n "${DRAINWATCH_LINUX_BIN:-}" ]; then
+  [ -x "$DRAINWATCH_LINUX_BIN" ] || fail "DRAINWATCH_LINUX_BIN=$DRAINWATCH_LINUX_BIN is not an executable file"
+  cp "$DRAINWATCH_LINUX_BIN" bin/drainwatch-linux
+else
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
   -trimpath -tags netgo,osusergo \
   -ldflags "-X github.com/jaynirmal15/drainwatch/internal/report.Version=${VERSION:-$(git describe --tags 2>/dev/null | sed 's/^v//' || echo 0.1.0-dev)} -X github.com/jaynirmal15/drainwatch/internal/report.GitCommit=$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" \
   -o bin/drainwatch-linux ./cmd/drainwatch
+fi
 
 # The node needs credentials pointing at the API server's address on the kind
 # network, not the loopback address your kubeconfig uses.

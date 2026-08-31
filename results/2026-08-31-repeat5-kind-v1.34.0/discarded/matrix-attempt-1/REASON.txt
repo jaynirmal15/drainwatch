@@ -1,0 +1,36 @@
+Matrix attempt 1 (2026-08-31T02:02Z-02:44Z) — DISCARDED for mixed provenance.
+Superseded by the arm-*/ directories alongside this one.
+
+All 25 trials completed. No arm aborted, every arm's repeats agreed on outcome
+counts, exit codes, configuration and environment, and the measurements
+themselves are believed sound. They are not the headline results for one reason:
+they were not produced by a single build.
+
+  arm A        orchestrator 0.1.0-4-g70142e0, probe 70142e0 and 70142e0-dirty
+  arms B-E     orchestrator 0.1.0-5-gc7b7e94, probe c7b7e94-dirty
+
+Two defects caused it, both fixed before the rerun:
+
+1. scripts/dwrun.sh rebuilt the orchestrator on every invocation and the matrix
+   rebuilt the probe image per arm, so a commit landing mid-run (c7b7e94, the
+   aggregator's disagreement/mechanism split) changed the binary between arm A
+   and arm B. The matrix now freezes one binary and one image before any arm
+   runs, loads that same image into each arm's fresh cluster, and verifies at
+   the end that every report names the frozen commit.
+
+2. The dirty-tree guard ran only at startup. The matrix writes its own untracked
+   reports into results/, so the tree was dirty for every subsequent per-arm
+   build, producing "-dirty" commit stamps. Freezing the build before any
+   results are written removes the problem at its source.
+
+`git diff --name-only 70142e0 c7b7e94` touches only internal/report/aggregate*.go
+and the recorded results — no file under internal/probe, internal/flowgen,
+internal/orchestrate, internal/envrecord or internal/preflight. The measurement
+path was therefore identical across the two builds, and these numbers are
+expected to agree with the rerun. That is an argument from a diff, not a
+guarantee from the record, which is why these results are kept here for
+comparison rather than quoted.
+
+The aggregator now treats build drift between repeats as a disagreement, so this
+class of defect fails loudly instead of being caught by hand
+(TestBuildDriftIsADisagreement, TestMatrixAnnouncesBuildDriftAcrossArms).

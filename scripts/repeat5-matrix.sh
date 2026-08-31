@@ -53,6 +53,21 @@ if [ -z "${ALLOW_DIRTY:-}" ] && [ -n "$(git status --porcelain 2>/dev/null)" ]; 
 fi
 
 # arm : drain_behavior : trigger
+# Freeze the build BEFORE any arm runs. Everything below uses this one binary
+# and this one image. Rebuilding per arm is how the first attempt at this matrix
+# ended up recording arm A from one commit and arms B-E from another.
+FROZEN_COMMIT="$(git rev-parse --short HEAD)"
+FROZEN_VERSION="$(git describe --tags 2>/dev/null | sed 's/^v//')"
+echo "matrix: freezing the build at ${FROZEN_VERSION} (${FROZEN_COMMIT})"
+mkdir -p bin
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+  -trimpath -tags netgo,osusergo \
+  -ldflags "-X github.com/jaynirmal15/drainwatch/internal/report.Version=${FROZEN_VERSION} -X github.com/jaynirmal15/drainwatch/internal/report.GitCommit=${FROZEN_COMMIT}" \
+  -o bin/drainwatch-matrix ./cmd/drainwatch
+make --no-print-directory probe-image-build VERSION="$FROZEN_VERSION" GIT_COMMIT="$FROZEN_COMMIT" GIT_DIRTY=""
+export DRAINWATCH_LINUX_BIN="$PWD/bin/drainwatch-matrix"
+export VERSION="$FROZEN_VERSION"
+
 ARMS=(
   "A:exit-now:delete"
   "B:drain:delete"
@@ -72,7 +87,8 @@ recreate_cluster() {
   CLUSTER_CREATE_EPOCH="$(date +%s)"
   kind create cluster --name "$CLUSTER" --config deploy/kind/kind-config.yaml --wait 120s
   CLUSTER_CREATE_SECONDS=$(( $(date +%s) - CLUSTER_CREATE_EPOCH ))
-  make --no-print-directory probe-image
+  # Load the frozen image; do not rebuild it.
+  make --no-print-directory probe-image-load
 }
 
 OUTDIR=""
@@ -110,7 +126,8 @@ cluster_name: $CLUSTER
 cluster_created_utc: $CLUSTER_CREATE_START
 cluster_create_seconds: $CLUSTER_CREATE_SECONDS
 kind_version: $(kind version 2>/dev/null | head -1)
-drainwatch_version: $(git describe --tags --always 2>/dev/null)
+drainwatch_version: $FROZEN_VERSION
+drainwatch_commit: $FROZEN_COMMIT
 EOF
 
   set +e
@@ -135,6 +152,22 @@ EOF
 
   echo "matrix: arm $ARM complete -> $ARMDIR"
 done
+
+# Provenance self-check. Every recorded report must name the frozen commit; if
+# any does not, the matrix says so rather than leaving it to be noticed later.
+echo
+echo "matrix: verifying every report came from the frozen build ${FROZEN_COMMIT}"
+bad=0
+for f in "$OUTDIR"/arm-*/trial-*/report.json; do
+  if ! grep -q "\"git_commit\": \"${FROZEN_COMMIT}\"" "$f"; then
+    echo "matrix: PROVENANCE MISMATCH in $f" >&2
+    bad=$((bad+1))
+  fi
+done
+if [ "$bad" -ne 0 ]; then
+  fail "$bad report(s) were not produced by the frozen build (invariant: every trial in a matrix must come from one binary)"
+fi
+echo "matrix: all reports carry ${FROZEN_COMMIT}"
 
 echo
 echo "matrix: all arms complete. Tearing the cluster down."

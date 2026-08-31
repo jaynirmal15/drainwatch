@@ -30,7 +30,7 @@ KIND_CLUSTER := drainwatch
 KIND_CONFIG := deploy/kind/kind-config.yaml
 OUT         ?= out
 
-.PHONY: all build test fmt vet lint kind-up kind-down probe-image demo reproduce clean help
+.PHONY: all build test fmt vet lint kind-up kind-down probe-image probe-image-build probe-image-load demo reproduce clean help
 
 all: build
 
@@ -58,11 +58,20 @@ lint:
 	go vet ./...
 
 ## probe-image: build the scratch probe image and side-load it into kind
-probe-image:
+probe-image: probe-image-build probe-image-load
+
+## probe-image-build: build the probe image only (no cluster needed)
+probe-image-build:
 	docker build \
 		--build-arg VERSION=$(VERSION) \
 		--build-arg GIT_COMMIT=$(COMMIT) \
 		-t $(IMAGE) .
+
+## probe-image-load: side-load an already-built probe image into kind
+#  Split from the build so an experiment can freeze one image and load that same
+#  image into each arm's fresh cluster, instead of rebuilding per arm and
+#  silently recording arms from different binaries.
+probe-image-load:
 	kind load docker-image $(IMAGE) --name $(KIND_CLUSTER)
 
 ## kind-up: create the two-node kind cluster (idempotent) and load the image

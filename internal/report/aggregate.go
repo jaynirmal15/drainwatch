@@ -75,8 +75,12 @@ type ArmAggregate struct {
 	TCPFlows           int         `json:"tcp_flows"`
 	UDPFlows           int         `json:"udp_flows"`
 	Environment        Environment `json:"environment"`
-	Stats              []Stat      `json:"stats"`
-	Repeats            []RepeatRow `json:"repeats"`
+	// Build is the drainwatch build that produced these reports. It is recorded
+	// per arm and compared across repeats: reports from different binaries are
+	// not repeats of one experiment.
+	Build   BuildID     `json:"build"`
+	Stats   []Stat      `json:"stats"`
+	Repeats []RepeatRow `json:"repeats"`
 	// ExitCodes tallies observed container exit codes. "not-measured" is a key
 	// like any other, so an unobserved exit is visible rather than absent.
 	ExitCodes map[string]int `json:"container_exit_codes"`
@@ -95,6 +99,18 @@ type ArmAggregate struct {
 	MechanismVariations   []string `json:"mechanism_variations"`
 	HasMechanismVariation bool     `json:"has_mechanism_variation"`
 }
+
+// BuildID names the binary that produced a report.
+type BuildID struct {
+	Version string `json:"drainwatch_version"`
+	Commit  string `json:"git_commit"`
+}
+
+func (b BuildID) String() string { return b.Version + " (" + b.Commit + ")" }
+
+// Dirty reports whether the build came from a tree with uncommitted changes,
+// which means its commit does not fully identify the code that ran.
+func (b BuildID) Dirty() bool { return strings.HasSuffix(b.Commit, "-dirty") }
 
 // metricSpec describes one aggregated metric and how to pull it from a report.
 type metricSpec struct {
@@ -320,6 +336,7 @@ func LoadArm(dir string) (*ArmAggregate, error) {
 	agg.TCPFlows = first.Trial.Config.TCPFlows
 	agg.UDPFlows = first.Trial.Config.UDPFlows
 	agg.Environment = first.Environment
+	agg.Build = BuildID{Version: first.DrainwatchVersion, Commit: first.GitCommit}
 
 	agg.Stats = buildStats(reports)
 	agg.Disagreements, agg.MechanismVariations = findDisagreements(reports, agg.Repeats)
@@ -400,6 +417,11 @@ func findDisagreements(reports []*Report, rows []RepeatRow) (disagreements, mech
 			disagreements = append(disagreements, fmt.Sprintf("%s ran a different configuration from %s: behavior/trigger %s/%s vs %s/%s (these repeats are not the same experiment)",
 				row.TrialID, baseRow.TrialID, r.Trial.Config.DrainBehavior, r.Trial.Config.Trigger,
 				base.Trial.Config.DrainBehavior, base.Trial.Config.Trigger))
+		}
+		if r.DrainwatchVersion != base.DrainwatchVersion || r.GitCommit != base.GitCommit {
+			disagreements = append(disagreements, fmt.Sprintf("%s was produced by a different drainwatch build from %s: %s vs %s (reports from different binaries are not repeats of one experiment)",
+				row.TrialID, baseRow.TrialID,
+				BuildID{r.DrainwatchVersion, r.GitCommit}, BuildID{base.DrainwatchVersion, base.GitCommit}))
 		}
 		if r.Environment.KubernetesVersion != base.Environment.KubernetesVersion ||
 			r.Environment.KubeProxyMode != base.Environment.KubeProxyMode ||

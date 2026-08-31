@@ -26,6 +26,8 @@ type trialFixture struct {
 	exitCode      string // "" means no container_terminated event at all
 	k8sVersion    string
 	kubeProxyMode string
+	version       string
+	commit        string
 }
 
 func writeArm(t *testing.T, dir string, fixtures []trialFixture) {
@@ -77,8 +79,15 @@ func writeArm(t *testing.T, dir string, fixtures []trialFixture) {
 			kp = "iptables"
 		}
 
+		ver, commit := f.version, f.commit
+		if ver == "" {
+			ver = "0.1.0"
+		}
+		if commit == "" {
+			commit = "abc1234"
+		}
 		r := Report{
-			DrainwatchVersion: "0.1.0", GitCommit: "abc1234",
+			DrainwatchVersion: ver, GitCommit: commit,
 			Environment: Environment{
 				KubernetesVersion: k8s, NodeCount: 2, KubeProxyMode: kp,
 				CNI: "kindnet", OS: "linux", Arch: "amd64", Warnings: []string{},
@@ -415,6 +424,85 @@ func TestEnvironmentDisagreementIsFlagged(t *testing.T) {
 	}
 	if !strings.Contains(strings.Join(agg.Disagreements, "\n"), "different environment") {
 		t.Errorf("got %v", agg.Disagreements)
+	}
+}
+
+// TestBuildDriftIsADisagreement.
+//
+// The repeat-5 matrix recorded arm A from one commit and arms B-E from another,
+// because the driver rebuilt per arm and a commit landed mid-run. The code
+// difference happened to be confined to post-hoc aggregation, but that is an
+// argument, not a guarantee: reports from different binaries are not repeats of
+// one experiment, and the aggregator must say so rather than leave it to be
+// noticed by hand.
+func TestBuildDriftIsADisagreement(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "arm-P")
+	a1 := baseFixture()
+	a1.version, a1.commit = "0.1.0-4-g70142e0", "70142e0"
+	a2 := baseFixture()
+	a2.version, a2.commit = "0.1.0-5-gc7b7e94", "c7b7e94"
+	writeArm(t, dir, []trialFixture{a1, a2})
+
+	agg, err := LoadArm(dir)
+	if err != nil {
+		t.Fatalf("LoadArm: %v", err)
+	}
+	if !agg.HasDisagreements {
+		t.Fatal("repeats produced by different builds must be flagged as a disagreement")
+	}
+	joined := strings.Join(agg.Disagreements, "\n")
+	if !strings.Contains(joined, "different drainwatch build") {
+		t.Errorf("the disagreement must name the cause: %s", joined)
+	}
+	if !strings.Contains(joined, "70142e0") || !strings.Contains(joined, "c7b7e94") {
+		t.Errorf("the disagreement must name both builds: %s", joined)
+	}
+}
+
+func TestBuildIDDirtyDetection(t *testing.T) {
+	if !(BuildID{"0.1.0", "abc1234-dirty"}).Dirty() {
+		t.Error("a -dirty commit must be detected")
+	}
+	if (BuildID{"0.1.0", "abc1234"}).Dirty() {
+		t.Error("a clean commit must not be reported dirty")
+	}
+}
+
+// TestMatrixAnnouncesBuildDriftAcrossArms: the cross-arm view must not let a
+// build difference hide behind per-arm consistency.
+func TestMatrixAnnouncesBuildDriftAcrossArms(t *testing.T) {
+	base := t.TempDir()
+	mk := func(name, version, commit string) *ArmAggregate {
+		dir := filepath.Join(base, name)
+		f := baseFixture()
+		f.version, f.commit = version, commit
+		writeArm(t, dir, []trialFixture{f, f})
+		a, err := LoadArm(dir)
+		if err != nil {
+			t.Fatalf("LoadArm %s: %v", name, err)
+		}
+		return a
+	}
+	one := mk("arm-A", "0.1.0-4-g70142e0", "70142e0")
+	two := mk("arm-B", "0.1.0-5-gc7b7e94", "c7b7e94")
+
+	var buf bytes.Buffer
+	RenderMatrix(&buf, []*ArmAggregate{one, two})
+	out := buf.String()
+	if !strings.Contains(out, "NOT PRODUCED BY ONE BUILD") {
+		t.Errorf("the matrix must announce build drift across arms:\n%s", out)
+	}
+
+	var clean bytes.Buffer
+	RenderMatrix(&clean, []*ArmAggregate{one, mk("arm-C", "0.1.0-4-g70142e0", "70142e0")})
+	if !strings.Contains(clean.String(), "all arms produced by one build") {
+		t.Error("a matrix from one build must say so")
+	}
+
+	var dirty bytes.Buffer
+	RenderMatrix(&dirty, []*ArmAggregate{mk("arm-D", "0.1.0-4-g70142e0", "70142e0-dirty")})
+	if !strings.Contains(dirty.String(), "uncommitted changes") {
+		t.Error("a dirty build must be announced")
 	}
 }
 
