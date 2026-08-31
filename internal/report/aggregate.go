@@ -80,10 +80,20 @@ type ArmAggregate struct {
 	// ExitCodes tallies observed container exit codes. "not-measured" is a key
 	// like any other, so an unobserved exit is visible rather than absent.
 	ExitCodes map[string]int `json:"container_exit_codes"`
-	// Disagreements names every way the repeats of this arm failed to agree.
-	// It is surfaced at the top of the rendered summary, never buried.
+	// Disagreements names every way the repeats of this arm are not the same
+	// experiment: differing outcome counts, exit codes, configuration or
+	// environment. Any entry here invalidates the arm's statistics, so it is
+	// surfaced above them and never buried.
 	Disagreements    []string `json:"disagreements"`
 	HasDisagreements bool     `json:"has_disagreements"`
+
+	// MechanismVariations records repeats that reached the same outcomes by
+	// different routes - for example UDP flows severed by re-homing in one
+	// repeat and by silence in another. This does NOT invalidate the arm: the
+	// outcome counts agree and the intervals remain comparable. It is reported
+	// because the variation is itself a result, not because it is a fault.
+	MechanismVariations   []string `json:"mechanism_variations"`
+	HasMechanismVariation bool     `json:"has_mechanism_variation"`
 }
 
 // metricSpec describes one aggregated metric and how to pull it from a report.
@@ -312,8 +322,9 @@ func LoadArm(dir string) (*ArmAggregate, error) {
 	agg.Environment = first.Environment
 
 	agg.Stats = buildStats(reports)
-	agg.Disagreements = findDisagreements(reports, agg.Repeats)
+	agg.Disagreements, agg.MechanismVariations = findDisagreements(reports, agg.Repeats)
 	agg.HasDisagreements = len(agg.Disagreements) > 0
+	agg.HasMechanismVariation = len(agg.MechanismVariations) > 0
 	return agg, nil
 }
 
@@ -350,14 +361,20 @@ func buildStats(reports []*Report) []Stat {
 	return stats
 }
 
-// findDisagreements reports every way the repeats of an arm failed to agree.
-// Repeats within an arm are supposed to be identical experiments; anything that
-// differs is either a real finding or a broken run, and either way it must be
-// stated rather than smoothed into a median.
-func findDisagreements(reports []*Report, rows []RepeatRow) []string {
-	var out []string
+// findDisagreements separates two different things.
+//
+// A disagreement means the repeats were not the same experiment: different
+// outcome counts, exit codes, configuration or environment. Any of those makes
+// the arm's medians meaningless, so they are returned first and rendered above
+// the statistics.
+//
+// A mechanism variation means the repeats reached the same outcomes by
+// different routes. That is a result about the system, not a fault in the run,
+// and it must not be presented as one - but it must not be silently dropped
+// either, because "10/10 severed" hides whether they were severed the same way.
+func findDisagreements(reports []*Report, rows []RepeatRow) (disagreements, mechanisms []string) {
 	if len(reports) == 0 {
-		return out
+		return nil, nil
 	}
 	base, baseRow := reports[0], rows[0]
 
@@ -370,38 +387,38 @@ func findDisagreements(reports []*Report, rows []RepeatRow) []string {
 		r, row := reports[i], rows[i]
 
 		if got, want := protoKey(row.TCP), protoKey(baseRow.TCP); got != want {
-			out = append(out, fmt.Sprintf("%s TCP outcomes differ from %s: [%s] vs [%s]", row.TrialID, baseRow.TrialID, got, want))
+			disagreements = append(disagreements, fmt.Sprintf("%s TCP outcomes differ from %s: [%s] vs [%s]", row.TrialID, baseRow.TrialID, got, want))
 		}
 		if got, want := protoKey(row.UDP), protoKey(baseRow.UDP); got != want {
-			out = append(out, fmt.Sprintf("%s UDP outcomes differ from %s: [%s] vs [%s]", row.TrialID, baseRow.TrialID, got, want))
-		}
-		if got, want := strings.Join(row.TCPMechanisms, "|"), strings.Join(baseRow.TCPMechanisms, "|"); got != want {
-			out = append(out, fmt.Sprintf("%s TCP mechanism differs from %s: %q vs %q", row.TrialID, baseRow.TrialID, got, want))
-		}
-		if got, want := strings.Join(row.UDPMechanisms, "|"), strings.Join(baseRow.UDPMechanisms, "|"); got != want {
-			out = append(out, fmt.Sprintf("%s UDP mechanism differs from %s: %q vs %q", row.TrialID, baseRow.TrialID, got, want))
+			disagreements = append(disagreements, fmt.Sprintf("%s UDP outcomes differ from %s: [%s] vs [%s]", row.TrialID, baseRow.TrialID, got, want))
 		}
 		if !sameExitCode(row.ContainerExitCode, baseRow.ContainerExitCode) {
-			out = append(out, fmt.Sprintf("%s container exit code differs from %s: %s vs %s",
+			disagreements = append(disagreements, fmt.Sprintf("%s container exit code differs from %s: %s vs %s",
 				row.TrialID, baseRow.TrialID, exitCodeString(row.ContainerExitCode), exitCodeString(baseRow.ContainerExitCode)))
 		}
-
 		if r.Trial.Config.DrainBehavior != base.Trial.Config.DrainBehavior || r.Trial.Config.Trigger != base.Trial.Config.Trigger {
-			out = append(out, fmt.Sprintf("%s ran a different configuration from %s: behavior/trigger %s/%s vs %s/%s (these repeats are not the same experiment)",
+			disagreements = append(disagreements, fmt.Sprintf("%s ran a different configuration from %s: behavior/trigger %s/%s vs %s/%s (these repeats are not the same experiment)",
 				row.TrialID, baseRow.TrialID, r.Trial.Config.DrainBehavior, r.Trial.Config.Trigger,
 				base.Trial.Config.DrainBehavior, base.Trial.Config.Trigger))
 		}
 		if r.Environment.KubernetesVersion != base.Environment.KubernetesVersion ||
 			r.Environment.KubeProxyMode != base.Environment.KubeProxyMode ||
 			r.Environment.NodeCount != base.Environment.NodeCount {
-			out = append(out, fmt.Sprintf("%s ran against a different environment from %s: k8s %s/%s, kube-proxy %s/%s, nodes %d/%d",
+			disagreements = append(disagreements, fmt.Sprintf("%s ran against a different environment from %s: k8s %s/%s, kube-proxy %s/%s, nodes %d/%d",
 				row.TrialID, baseRow.TrialID,
 				r.Environment.KubernetesVersion, base.Environment.KubernetesVersion,
 				r.Environment.KubeProxyMode, base.Environment.KubeProxyMode,
 				r.Environment.NodeCount, base.Environment.NodeCount))
 		}
+
+		if got, want := strings.Join(row.TCPMechanisms, " + "), strings.Join(baseRow.TCPMechanisms, " + "); got != want {
+			mechanisms = append(mechanisms, fmt.Sprintf("%s TCP severance route differs from %s: %q vs %q", row.TrialID, baseRow.TrialID, got, want))
+		}
+		if got, want := strings.Join(row.UDPMechanisms, " + "), strings.Join(baseRow.UDPMechanisms, " + "); got != want {
+			mechanisms = append(mechanisms, fmt.Sprintf("%s UDP severance route differs from %s: %q vs %q", row.TrialID, baseRow.TrialID, got, want))
+		}
 	}
-	return out
+	return disagreements, mechanisms
 }
 
 func sameExitCode(a, b *int) bool {

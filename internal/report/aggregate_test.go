@@ -313,6 +313,11 @@ func TestDisagreementIsFlaggedLoudly(t *testing.T) {
 	if !strings.Contains(joined, "TCP outcomes differ") {
 		t.Errorf("the disagreement must say what differed: %s", joined)
 	}
+	// The same repeat also used a different mechanism; that belongs in the
+	// informational bucket, not duplicated into the invalidating one.
+	if strings.Contains(joined, "severance route differs") {
+		t.Errorf("mechanism variation must not be counted as a disagreement: %s", joined)
+	}
 
 	var buf bytes.Buffer
 	RenderArmAggregate(&buf, a)
@@ -322,6 +327,48 @@ func TestDisagreementIsFlaggedLoudly(t *testing.T) {
 	}
 	if strings.Index(out, "DISAGREEMENT") > strings.Index(out, "SAME-CLOCK INTERVALS") {
 		t.Error("disagreements must be printed before the statistics they undermine")
+	}
+}
+
+// TestMechanismVariationIsReportedButDoesNotInvalidateTheArm.
+//
+// Repeats that reach the same outcomes by different routes are a result about
+// the system, not a broken run: "10/10 severed" hides whether they were severed
+// the same way, so the variation must be reported - but the arm's intervals
+// remain comparable, so it must not be presented as a disagreement.
+func TestMechanismVariationIsReportedButDoesNotInvalidateTheArm(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "arm-M")
+	rehomed := baseFixture()
+	silent := baseFixture()
+	silent.udpDetail = "udp-silence-6-datagrams" // same outcome, different route
+	writeArm(t, dir, []trialFixture{rehomed, silent, rehomed})
+
+	a, err := LoadArm(dir)
+	if err != nil {
+		t.Fatalf("LoadArm: %v", err)
+	}
+	if a.HasDisagreements {
+		t.Errorf("a mechanism-only difference must not invalidate the arm, got %v", a.Disagreements)
+	}
+	if !a.HasMechanismVariation {
+		t.Fatal("a mechanism-only difference must still be reported")
+	}
+	joined := strings.Join(a.MechanismVariations, "\n")
+	if !strings.Contains(joined, "trial-002") || !strings.Contains(joined, "UDP severance route differs") {
+		t.Errorf("the variation must name the repeat and what varied: %s", joined)
+	}
+
+	var buf bytes.Buffer
+	RenderArmAggregate(&buf, a)
+	out := buf.String()
+	if strings.Contains(out, "DISAGREEMENT") {
+		t.Error("mechanism variation must not be rendered as a disagreement")
+	}
+	if !strings.Contains(out, "different routes") {
+		t.Error("mechanism variation must be rendered")
+	}
+	if strings.Index(out, "NOTE: the repeats agree on outcomes") > strings.Index(out, "SAME-CLOCK INTERVALS") {
+		t.Error("the note must appear before the statistics it qualifies")
 	}
 }
 

@@ -45,8 +45,20 @@ func RenderArmAggregate(w io.Writer, a *ArmAggregate) {
 		if a.Trials == 1 {
 			noun = "repeat (nothing to disagree with)"
 		}
-		fmt.Fprintf(w, "  all %d %s on every outcome, mechanism and exit code\n\n", a.Trials, noun)
+		fmt.Fprintf(w, "  all %d %s on outcome counts, exit code, configuration and environment\n", a.Trials, noun)
 	}
+
+	// Mechanism variation is a result, not a fault, so it is reported plainly
+	// rather than as a warning - but still before the statistics, because it
+	// qualifies what "10/10 severed" means.
+	if a.HasMechanismVariation {
+		fmt.Fprintf(w, "\n  NOTE: the repeats agree on outcomes but reached them by different routes.\n")
+		fmt.Fprintf(w, "  NOTE: the intervals below remain comparable; the severance mechanism is itself a result.\n")
+		for _, m := range a.MechanismVariations {
+			fmt.Fprintf(w, "  NOTE:   %s\n", m)
+		}
+	}
+	fmt.Fprintln(w)
 
 	fmt.Fprintln(w, "  PER-REPEAT OUTCOMES")
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
