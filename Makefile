@@ -6,10 +6,12 @@
 
 SHELL := /bin/bash
 
-# VERSION comes from the nearest annotated tag, so a tagged build reports the
-# tag rather than a string someone remembered to bump. Untagged checkouts fall
+# VERSION comes from `git describe --tags`, so a build made at the tag reports
+# exactly "0.1.0" and a build made after it reports "0.1.0-3-gabc1234". A report
+# therefore states on its face whether it came from the released commit or from
+# work on top of it, which a bare tag name would hide. Untagged checkouts fall
 # back to the development version.
-GIT_TAG     := $(shell git describe --tags --abbrev=0 2>/dev/null)
+GIT_TAG     := $(shell git describe --tags 2>/dev/null)
 VERSION     ?= $(if $(GIT_TAG),$(patsubst v%,%,$(GIT_TAG)),0.1.0-dev)
 GIT_COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo unknown)
 GIT_DIRTY   := $(shell test -n "$$(git status --porcelain 2>/dev/null)" && echo "-dirty" || echo "")
