@@ -6,6 +6,10 @@
 //	drainwatch run     the orchestrator: deploy, verify, hold, trigger, observe, report
 //	drainwatch probe   the in-cluster workload whose termination is measured
 //	drainwatch client  the flow generator, exposed for manual runs
+//
+// and one reporting subcommand:
+//
+//	drainwatch aggregate  min/median/max across the repeats of an arm
 package main
 
 import (
@@ -46,6 +50,8 @@ func main() {
 		os.Exit(cmdProbe(os.Args[2:]))
 	case "client":
 		os.Exit(cmdClient(os.Args[2:]))
+	case "aggregate":
+		os.Exit(cmdAggregate(os.Args[2:]))
 	case "version", "--version", "-version":
 		fmt.Printf("drainwatch %s (%s)\n", report.Version, report.GitCommit)
 		os.Exit(exitOK)
@@ -68,6 +74,7 @@ Usage:
   drainwatch run     [flags]   orchestrate a full trial and write a report
   drainwatch probe   [flags]   run the in-cluster test workload
   drainwatch client  [flags]   run the flow generator by hand
+  drainwatch aggregate <dirs>  summarise the repeats of one or more arm directories
   drainwatch version           print the version and git commit
 
 Run "drainwatch <subcommand> --help" for the flags of a subcommand.
@@ -289,6 +296,77 @@ loop:
 			return exitError
 		}
 		fmt.Fprintf(os.Stdout, "\nflow records written to %s\n", *outPath)
+	}
+	return exitOK
+}
+
+// cmdAggregate summarises the repeats of one or more arm directories.
+//
+// An arm directory holds trial-NNN/report.json for each repeat, which is the
+// layout `drainwatch run --repeat N --out <dir>` produces.
+func cmdAggregate(args []string) int {
+	fs := flag.NewFlagSet("drainwatch aggregate", flag.ExitOnError)
+	outPath := fs.String("out", "", "optional path to write the aggregate as JSON")
+	strict := fs.Bool("strict", false, "exit 3 if any arm's repeats disagree with each other")
+	fs.Usage = func() {
+		fmt.Fprintln(fs.Output(), `Usage: drainwatch aggregate [flags] <arm-dir>...
+
+Reads trial-NNN/report.json from each arm directory and reports, per arm:
+  * min / median / max for each interval, across the repeats
+  * per-repeat outcome counts and mechanisms
+  * container exit codes
+
+Same-clock and cross-clock intervals are reported in separate blocks and are
+never combined into one statistic: they do not have the same precision.
+
+A metric no repeat observed is reported as not-measured, never as zero. If the
+repeats of an arm disagree on any outcome, mechanism, exit code, configuration
+or environment, that is announced above the statistics rather than averaged in.`)
+		fmt.Fprintln(fs.Output())
+		fs.PrintDefaults()
+	}
+	if err := fs.Parse(args); err != nil {
+		return exitError
+	}
+	dirs := fs.Args()
+	if len(dirs) == 0 {
+		fmt.Fprintln(os.Stderr, "drainwatch aggregate: no arm directories given")
+		fs.Usage()
+		return exitError
+	}
+
+	arms, err := report.LoadArms(dirs)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "drainwatch aggregate: %v\n", err)
+		return exitError
+	}
+
+	for i, a := range arms {
+		if i > 0 {
+			fmt.Fprintln(os.Stdout)
+		}
+		report.RenderArmAggregate(os.Stdout, a)
+	}
+	if len(arms) > 1 {
+		fmt.Fprintln(os.Stdout)
+		report.RenderMatrix(os.Stdout, arms)
+	}
+
+	if *outPath != "" {
+		if err := report.WriteJSON(*outPath, arms); err != nil {
+			fmt.Fprintf(os.Stderr, "drainwatch aggregate: %v\n", err)
+			return exitError
+		}
+		fmt.Fprintf(os.Stdout, "\naggregate written to %s\n", *outPath)
+	}
+
+	if *strict {
+		for _, a := range arms {
+			if a.HasDisagreements {
+				fmt.Fprintf(os.Stderr, "drainwatch aggregate: arm %s has repeats that disagree (--strict)\n", a.Arm)
+				return 3
+			}
+		}
 	}
 	return exitOK
 }
