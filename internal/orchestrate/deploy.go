@@ -190,8 +190,14 @@ func ensureNamespace(ctx context.Context, cs kubernetes.Interface, ns string) er
 	return nil
 }
 
-// deleteProbeWorkload removes a previous Deployment and blocks until no pod
-// carrying the probe label remains.
+// deleteProbeWorkload removes a previous Deployment and blocks until both the
+// Deployment object and every pod carrying the probe label are gone.
+//
+// Waiting for the pods alone is not enough. Foreground propagation keeps the
+// Deployment object alive until its dependents are collected, so there is a
+// window in which the pods have gone but the Deployment is still finalizing;
+// creating into that window fails with "object is being deleted". Both
+// conditions must hold before the next trial starts.
 func deleteProbeWorkload(ctx context.Context, cs kubernetes.Interface, ns, name string) error {
 	policy := metav1.DeletePropagationForeground
 	err := cs.AppsV1().Deployments(ns).Delete(ctx, name, metav1.DeleteOptions{PropagationPolicy: &policy})
@@ -201,24 +207,47 @@ func deleteProbeWorkload(ctx context.Context, cs kubernetes.Interface, ns, name 
 
 	deadline := time.Now().Add(2 * time.Minute)
 	for {
-		pods, err := cs.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{LabelSelector: LabelApp + "=" + LabelAppValue})
+		blockers, err := probeWorkloadRemnants(ctx, cs, ns, name)
 		if err != nil {
-			return fmt.Errorf("cannot list probe pods in %s while waiting for the previous trial to clear: %w", ns, err)
+			return err
 		}
-		if len(pods.Items) == 0 {
+		if len(blockers) == 0 {
 			return nil
 		}
 		if time.Now().After(deadline) {
-			names := make([]string, 0, len(pods.Items))
-			for _, p := range pods.Items {
-				names = append(names, p.Name)
-			}
-			return fmt.Errorf("probe pods from a previous trial are still present after 2m: %s (invariant: a trial must not observe the tail of the previous trial's termination; delete them and retry)", strings.Join(names, ", "))
+			return fmt.Errorf("the previous probe workload is still present after 2m: %s (invariant: a trial must not observe the tail of the previous trial's termination, and cannot create a workload that is still being deleted; remove these and retry)", strings.Join(blockers, ", "))
 		}
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("cancelled while waiting for previous probe pods to clear: %w", ctx.Err())
+			return fmt.Errorf("cancelled while waiting for the previous probe workload to clear: %w", ctx.Err())
 		case <-time.After(500 * time.Millisecond):
 		}
 	}
+}
+
+// probeWorkloadRemnants names everything from a previous trial that still
+// exists. An empty result means the namespace is clean.
+func probeWorkloadRemnants(ctx context.Context, cs kubernetes.Interface, ns, name string) ([]string, error) {
+	var blockers []string
+
+	dep, err := cs.AppsV1().Deployments(ns).Get(ctx, name, metav1.GetOptions{})
+	switch {
+	case err == nil:
+		state := "still exists"
+		if dep.DeletionTimestamp != nil {
+			state = "is still being deleted"
+		}
+		blockers = append(blockers, fmt.Sprintf("deployment/%s %s", name, state))
+	case !apierrors.IsNotFound(err):
+		return nil, fmt.Errorf("cannot read the probe Deployment %s/%s while waiting for the previous trial to clear: %w", ns, name, err)
+	}
+
+	pods, err := cs.CoreV1().Pods(ns).List(ctx, metav1.ListOptions{LabelSelector: LabelApp + "=" + LabelAppValue})
+	if err != nil {
+		return nil, fmt.Errorf("cannot list probe pods in %s while waiting for the previous trial to clear: %w", ns, err)
+	}
+	for _, p := range pods.Items {
+		blockers = append(blockers, "pod/"+p.Name)
+	}
+	return blockers, nil
 }

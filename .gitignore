@@ -1,8 +1,12 @@
 # Build output
 /bin/
 
-# Run output: reports, summaries and per-arm logs
+# Run output: reports, summaries and per-arm logs.
+# Recorded evidence that findings cite lives in results/ and IS committed.
 /out/
+
+# The Linux orchestrator binary scripts/dwrun.sh builds for the node backend
+/bin/drainwatch-linux
 
 # Editor and OS noise
 .DS_Store

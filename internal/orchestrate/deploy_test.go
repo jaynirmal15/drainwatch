@@ -1,9 +1,15 @@
 package orchestrate
 
 import (
+	"context"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/fake"
 
 	"github.com/jaynirmal15/drainwatch/internal/probe"
 )
@@ -138,5 +144,45 @@ func TestSplitYAMLDocuments(t *testing.T) {
 	docs = splitYAMLDocuments("a: \"---\"\n")
 	if len(docs) != 1 {
 		t.Errorf("got %d documents, want 1", len(docs))
+	}
+}
+
+// TestProbeWorkloadRemnantsReportsBothBlockers: waiting only for pods is not
+// enough, because foreground deletion keeps the Deployment object alive until
+// its dependents are collected. Creating into that window fails with "object is
+// being deleted", which is exactly the race this reports on.
+func TestProbeWorkloadRemnantsReportsBothBlockers(t *testing.T) {
+	now := metav1.Now()
+	terminating := &appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{
+		Name: "drainwatch-probe", Namespace: "drainwatch", DeletionTimestamp: &now,
+		Finalizers: []string{"foregroundDeletion"},
+	}}
+	pod := &corev1.Pod{ObjectMeta: metav1.ObjectMeta{
+		Name: "drainwatch-probe-abc", Namespace: "drainwatch",
+		Labels: map[string]string{LabelApp: LabelAppValue},
+	}}
+
+	cs := fake.NewSimpleClientset(terminating, pod)
+	got, err := probeWorkloadRemnants(context.Background(), cs, "drainwatch", "drainwatch-probe")
+	if err != nil {
+		t.Fatalf("probeWorkloadRemnants: %v", err)
+	}
+	if len(got) != 2 {
+		t.Fatalf("got %v, want both the terminating deployment and the pod", got)
+	}
+	if !strings.Contains(got[0], "still being deleted") {
+		t.Errorf("a terminating deployment must be reported as a blocker, got %q", got[0])
+	}
+	if !strings.Contains(got[1], "drainwatch-probe-abc") {
+		t.Errorf("the pod must be reported as a blocker, got %q", got[1])
+	}
+
+	// A clean namespace blocks nothing.
+	got, err = probeWorkloadRemnants(context.Background(), fake.NewSimpleClientset(), "drainwatch", "drainwatch-probe")
+	if err != nil {
+		t.Fatalf("probeWorkloadRemnants on a clean namespace: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("a clean namespace must report no blockers, got %v", got)
 	}
 }

@@ -12,17 +12,12 @@ recorded on a real cluster — see [Status](#status).
 | --- | --- |
 | Harness | v0.1, complete |
 | Unit and loopback tests | passing (`make test`) |
-| Cluster runs recorded | **none yet** |
+| Cluster runs recorded | **3 arms, n=1 each**, 2026-08-31 |
+| Raw reports | [`results/2026-08-31-kind-v1.34.0/`](results/2026-08-31-kind-v1.34.0/) |
 
-The loopback tests in `internal/orchestrate/loopback_test.go` verify the part of the
-mechanism that does not need Kubernetes: that the probe's three SIGTERM behaviours put
-the expected bytes on the wire, and that the classifier turns those bytes into the
-expected outcomes. What they cannot verify is anything involving kube-proxy,
-EndpointSlices, the kubelet, or the grace-period boundary. Those numbers only exist once
-`make reproduce` has been run on a real cluster, and this file will carry them, with the
-environment record from the run that produced them.
-
-Nothing in this file is an estimate.
+Every number in the Findings section below is copied from a `report.json` in that
+directory, produced by a single `make reproduce` on a freshly created cluster. Each arm
+was run once; nothing here is an average, and nothing here is an estimate.
 
 ---
 
@@ -190,70 +185,94 @@ this reason, not because it is uninteresting.
 
 ## Findings
 
-> **No cluster runs have been recorded yet.** The tables below are the shape the results
-> take; they contain no data. Run `make reproduce` and paste the environment block and the
-> three summaries in.
+Recorded 2026-08-31 by `make reproduce`. Raw reports:
+[`results/2026-08-31-kind-v1.34.0/`](results/2026-08-31-kind-v1.34.0/), with the full
+console output in `reproduce.log`.
 
 ### Run metadata
 
 | | |
 | --- | --- |
-| Date | _not recorded_ |
-| drainwatch version / commit | _not recorded_ |
-| Kubernetes version | _not recorded_ |
-| Nodes / container runtime | _not recorded_ |
-| kube-proxy mode | _not recorded_ |
-| CNI | _not recorded_ |
-| Host OS / arch | _not recorded_ |
+| Date | 2026-08-31 (wall clock start 01:03:21Z) |
+| drainwatch version / commit | 0.1.0 / `d36d40d` |
+| Kubernetes version | v1.34.0 (kind, 2 nodes) |
+| Nodes / container runtime | drainwatch-control-plane, drainwatch-worker — containerd://2.1.3, kubelet v1.34.0, Debian 12 (bookworm), amd64 |
+| kube-proxy mode | `iptables` (read from the ConfigMap) |
+| CNI | kindnet (identified by DaemonSet name; best effort) |
+| Orchestrator host | linux/amd64 — running inside the kind worker node, see [the macOS note](#the-orchestrator-ran-inside-the-node) |
+| Environment warnings | none: every field was readable |
+| Config held constant | 10 TCP flows, 10 UDP flows, grace period 30s, `--trigger delete`, settle 10s, observation window 60s |
 
-### Arm 1 — `drain`
+### Results
 
-Expected shape, from the loopback tests and the design: TCP flows receive a `bye` and a
-FIN and are recorded `drained-clean-close`; UDP flows go silent when the pod's networking
-goes away and are recorded `severed`. What is genuinely unknown until measured: the
-interval from SIGTERM to `endpointslice_ready_false`, whether endpoint removal precedes or
-follows the last flow terminal, and how much the probe's approximate clock offset moves
-the `sigterm_received` entry.
-
-| Metric | Value |
-| --- | --- |
-| tcp drained / severed / read-timeout / survived | _not recorded_ |
-| udp drained / severed / read-timeout / survived | _not recorded_ |
-| trigger → sigterm | _not recorded_ |
-| sigterm → endpoint `ready:false` | _not recorded_ |
-| trigger → endpoint removed | _not recorded_ |
-| trigger → container terminated | _not recorded_ |
-| sigterm → last flow terminal | _not recorded_ |
-
-### Arm 2 — `exit-now`
-
-| Metric | Value |
-| --- | --- |
-| tcp drained / severed / read-timeout / survived | _not recorded_ |
-| udp drained / severed / read-timeout / survived | _not recorded_ |
-| trigger → sigterm | _not recorded_ |
-| sigterm → endpoint `ready:false` | _not recorded_ |
-| trigger → container terminated | _not recorded_ |
-| sigterm → last flow terminal | _not recorded_ |
-
-### Arm 3 — `ignore`
-
-The arm where the grace-period boundary is the whole point: the application never exits,
-so the kubelet SIGKILLs it and `container_terminated` should carry `exitCode=137`
-(128 + SIGKILL) at roughly `trigger + grace-period`.
-
-| Metric | Value |
-| --- | --- |
-| tcp drained / severed / read-timeout / survived | _not recorded_ |
-| udp drained / severed / read-timeout / survived | _not recorded_ |
-| trigger → container terminated (SIGKILL boundary) | _not recorded_ |
-| container exit code | _not recorded_ |
-| sigterm → last flow terminal | _not recorded_ |
+| | `drain` | `exit-now` | `ignore` |
+| --- | --- | --- | --- |
+| TCP outcome | **10/10 drained-clean-close** | **10/10 severed** (`econnreset`) | **10/10 severed** (unannounced FIN) |
+| TCP terminal | 25065–25069 ms | **46 ms** | 30057–30058 ms |
+| UDP outcome | 10/10 severed (re-homed) | 10/10 severed (re-homed) | 10/10 severed (re-homed) |
+| UDP terminal | 2381–2384 ms | 2410 ms | 30428 ms |
+| trigger → SIGTERM | 63 ms | 45 ms | 31 ms |
+| SIGTERM → endpoint `ready:false` | −8 ms | −16 ms | 0 ms |
+| trigger → endpoint removed | 25739 ms | 376 ms | 30328 ms |
+| trigger → container terminated | 25599 ms | 340 ms | **30323 ms** |
+| container exit | `exitCode=0 reason=Completed` | `exitCode=0 reason=Completed` | **`exitCode=137 reason=Error`** |
 
 ### Observations
 
-_To be written from the recorded runs. Anything in this section must be traceable to a
-`report.json` in the repository or to a pasted timeline._
+**1. SIGTERM arrives within ~30–60 ms of the delete call, and the endpoint leaves rotation
+at essentially the same moment.** `trigger → sigterm` was 31–63 ms across the three arms.
+`sigterm → ready:false` came out at −8, −16 and 0 ms. The negative values are not evidence
+that the endpoint left rotation before SIGTERM: the two timestamps come from different
+hosts' clocks, and the report says so in a note on each affected trial. The honest reading
+is that on this cluster the two events are simultaneous to within the measurement's
+resolution — which is itself the useful result, because the common assumption is that
+endpoint removal reliably *precedes* SIGTERM by a usable margin. It does not here.
+
+**2. What the application does on SIGTERM determines the TCP outcome completely, and the
+spread is three orders of magnitude.** Same cluster, same trigger, same grace period:
+
+- `exit-now` killed every connection at **46 ms**, with RST.
+- `drain` held all ten to **25.07 s** and closed them cleanly.
+- `ignore` held them to **30.06 s**, where SIGKILL cut them mid-stream.
+
+**3. In `exit-now`, connections died ~330 ms before the endpoint was removed.** TCP flows
+were severed at 46 ms; the endpoint was removed from the EndpointSlice at 376 ms. For that
+window the Service still advertised an endpoint whose process had already gone. This is the
+concrete shape of the race that connection-draining guidance is meant to address, measured
+rather than asserted.
+
+**4. `ignore` shows the grace-period boundary exactly where it should be.** TCP flows were
+severed at 30057 ms and the container terminated at 30323 ms with `exitCode=137` — 128 +
+SIGKILL — against a 30 s grace period. An application that never exits does not get to
+choose when its connections die.
+
+**5. UDP flows were re-homed onto a replacement pod in every arm, and no application-level
+drain can prevent it.** `--trigger delete` on a Deployment-managed pod causes the
+ReplicaSet to create a replacement. Because UDP is connectionless, the client's flows were
+picked up by that replacement, which the probe made visible by putting its pod name on the
+wire.
+
+The timing differs between arms in a way worth noting. In `drain` and `exit-now`,
+re-homing happened at ~2.4 s — roughly when the replacement became ready — even though in
+`drain` the original probe was still serving UDP for another 22 seconds. In `ignore`,
+re-homing happened at 30.4 s, just after the original was killed. The pattern is consistent
+with kube-proxy steering new datagrams away from an endpoint once it leaves rotation,
+independently of whether the application is still willing to serve them; the `ignore` arm's
+endpoint stayed in service until the process died. drainwatch did not inspect kube-proxy or
+conntrack to confirm that mechanism, so treat the explanation as inference and the
+timestamps as the measurement.
+
+The practical point stands regardless of mechanism: **a graceful shutdown routine buys a
+TCP connection 25 seconds and buys a UDP flow nothing.** Draining is a property of the
+connection, and UDP does not have one.
+
+**6. This finding was originally hidden by a defect in drainwatch itself.** In the first
+cluster run, the UDP flows were reported as `survived-observation-window`, because the
+client kept receiving acks for the full 60 seconds and had no way to know they were coming
+from a different pod. That reads as "nothing happened to these flows", which is the
+opposite of the truth. The probe now identifies its process on every heartbeat and ack, and
+a flow answered by a new instance is classified `severed`. Two other defects surfaced the
+same way and are recorded in commit `d36d40d`.
 
 ---
 
@@ -300,3 +319,18 @@ bin/drainwatch run --repeat 5 --out out/repeat5     # 5 trials plus summary.json
   proof of a torn-down path. The record says `severed` and names the rule that produced it.
 - **No conntrack inspection.** Whether a conntrack entry survived a kube-proxy rule update
   is not observed. Only the flow's fate is.
+
+### The orchestrator ran inside the node
+
+On macOS, `scripts/dwrun.sh` runs the orchestrator inside the kind worker container rather
+than on the host, and the recorded run above used that backend. The reason is a Docker
+Desktop limitation, not a Kubernetes one: published **UDP** ports are not forwarded
+reliably. In testing, the `127.0.0.1:7002 -> 30072/udp` mapping carried the first ~50
+datagrams and then stopped delivering entirely, while the TCP mapping on the same node kept
+working. UDP through the same NodePort worked perfectly from inside the cluster, and from
+inside the node, at the same moment the host could not reach it at all.
+
+The measured path is therefore `node -> NodePort -> kube-proxy DNAT -> pod on the same
+node`, which is the path the kind config was designed around, minus Docker Desktop's
+userland proxy hop. On Linux the host backend is used and the extra hop is present; that
+difference is recorded in each report's `environment.os`.

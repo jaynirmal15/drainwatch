@@ -36,6 +36,14 @@ docker info >/dev/null 2>&1 || fail "the Docker daemon is not reachable (invaria
 
 echo "reproduce: recreating a clean kind cluster '$CLUSTER'"
 kind delete cluster --name "$CLUSTER" >/dev/null 2>&1 || true
+# A previous run that was interrupted mid-create can leave node containers
+# behind that `kind delete` does not know about, and the next create then fails
+# on the container name. Clear them explicitly so "clean cluster" means it.
+leftovers="$(docker ps -aq --filter "label=io.x-k8s.kind.cluster=${CLUSTER}" 2>/dev/null || true)"
+if [ -n "$leftovers" ]; then
+  echo "reproduce: removing $(echo "$leftovers" | wc -l | tr -d ' ') leftover node container(s) from a previous run"
+  docker rm -f $leftovers >/dev/null 2>&1 || true
+fi
 kind create cluster --name "$CLUSTER" --config deploy/kind/kind-config.yaml --wait 120s
 
 echo "reproduce: building drainwatch and the probe image"

@@ -20,28 +20,33 @@ SUMMARY
   tcp    10     10       0        0             0                0
   udp    10     0        10       0             0                0
 
-  trigger -> sigterm               112 ms
-  sigterm -> endpoint ready:false  228 ms
-  trigger -> endpoint removed      25390 ms
-  trigger -> container terminated  25402 ms
-  sigterm -> last flow terminal    25022 ms
+  trigger -> sigterm               63 ms
+  sigterm -> endpoint ready:false  -8 ms
+  trigger -> endpoint removed      25739 ms
+  trigger -> container terminated  25599 ms
+  sigterm -> last flow terminal    25006 ms
 
-TIMELINE (t_ms relative to trigger_issued)
-  T_MS     SOURCE        EVENT                           DETAIL
-  0        orchestrator  trigger_issued                  trigger=delete target=drainwatch/drainwatch-probe-x2kqp
-  94       k8s           pod_deletion_timestamp_set      deletionGracePeriodSeconds=30
-  112 ~    probe         sigterm_received                signal=terminated
-  114 ~    probe         readyz_now_503                  /readyz now returns 503
-  340      k8s           endpointslice_ready_false       terminating=true serving=true
-  3550     client        flow_terminal                   udp-0004 severed: udp-silence-6-datagrams
-  25133    client        flow_terminal                   tcp-0001 drained-clean-close: fin after drain announcement
-  25390    k8s           endpointslice_endpoint_removed  Pod/drainwatch-probe-x2kqp removed
-  (~ marks a cross-host approximate timestamp; see clock_note)
+FLOWS
+  ID        PROTO  OUTCOME              T_TERMINAL  LAST_SEQ  DETAIL
+  tcp-0001  tcp    drained-clean-close  25066 ms    70        fin after drain announcement
+  udp-0001  udp    severed              2382 ms     24        answered by probe instance drainwatch-probe-5497cd7d46-tvb75, was drainwatch-probe-5497cd7d46-nj9t4
 ```
 
-> The block above shows the exact output format. The numbers in it are illustrative,
-> not a recorded run — see [EXPERIMENTS.md](EXPERIMENTS.md) for the findings, which
-> carry the environment they were measured in.
+(The real output has one row per flow and a TIMELINE section above; 18 flow rows are
+elided here. The rest is verbatim.)
+
+That is a real recorded run, not a mock-up: it is the `drain` arm of
+[`results/2026-08-31-kind-v1.34.0/`](results/2026-08-31-kind-v1.34.0/), on kind with
+Kubernetes v1.34.0 and kube-proxy in iptables mode. Two things in it are worth a second
+look, and both are the point of the tool:
+
+- **`sigterm -> endpoint ready:false` is −8 ms.** Not a time machine — the two timestamps
+  come from different hosts' clocks, and the report says so in a note. The honest reading
+  is "simultaneous to within measurement resolution", which already contradicts the common
+  assumption that endpoint removal precedes SIGTERM by a usable margin.
+- **The UDP flows were severed at 2.38 s while the probe was still serving.** They were
+  silently re-homed onto the replacement pod the ReplicaSet created. A graceful shutdown
+  routine bought the TCP connections 25 seconds and bought the UDP flows nothing.
 
 ---
 
@@ -106,6 +111,14 @@ entry carries `"approximate": true`.
 Requirements: Go 1.22+, Docker, and [kind](https://kind.sigs.k8s.io/). No other runtime
 dependencies — drainwatch is a single static binary built from the standard library plus
 `k8s.io/client-go`.
+
+**On macOS**, `make demo` and `make reproduce` run the orchestrator *inside* the kind node
+rather than on your host. Docker Desktop does not reliably forward published UDP ports — in
+testing the mapping carried the first ~50 datagrams and then stopped, while TCP kept
+working — so a host-side run fails the `udp-flows-replying` preflight check. UDP through
+the same NodePort works fine from inside the cluster, so `scripts/dwrun.sh` moves the
+orchestrator across that boundary and copies the reports back. This is automatic; set
+`DRAINWATCH_RUNNER=host` to force the host-side path anyway.
 
 ```bash
 git clone https://github.com/jaynirmal15/drainwatch
@@ -201,7 +214,21 @@ collects the whole run.
 ## Findings
 
 Recorded results, the full methodology, and the reasoning behind each design choice live
-in **[EXPERIMENTS.md](EXPERIMENTS.md)**.
+in **[EXPERIMENTS.md](EXPERIMENTS.md)**. The raw reports they are drawn from are committed
+under [`results/`](results/2026-08-31-kind-v1.34.0/).
+
+The headline from the first recorded run — same cluster, same trigger, same 30 s grace
+period, one variable changed:
+
+| SIGTERM behaviour | TCP flows | When they ended | Container exit |
+| --- | --- | --- | --- |
+| `exit-now` | 10/10 severed (RST) | **46 ms** | `exitCode=0` |
+| `drain` | 10/10 drained cleanly | **25.07 s** | `exitCode=0` |
+| `ignore` | 10/10 severed (SIGKILL) | **30.06 s** | **`exitCode=137`** |
+
+UDP was severed in all three arms by being re-homed onto the replacement pod. In
+`exit-now`, connections died ~330 ms *before* the endpoint was removed from the
+EndpointSlice.
 
 Companion articles:
 
@@ -237,6 +264,11 @@ The test suite includes loopback integration tests that wire the real probe to t
 flow generator with no Kubernetes involved, asserting that each of the three SIGTERM
 behaviours produces the wire events the classifier expects — a drain puts an
 announcement on the wire before its FIN, and an abrupt exit does not.
+
+Those tests cannot cover kube-proxy, EndpointSlices or the grace-period boundary. Three
+defects in drainwatch were found only by running against a real cluster, and are recorded
+in commit `d36d40d` — including one where re-homed UDP flows were reported as having
+survived untouched.
 
 ## Licence
 
