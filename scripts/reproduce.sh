@@ -24,8 +24,6 @@ CLUSTER="${KIND_CLUSTER:-drainwatch}"
 GRACE="${GRACE:-30}"
 TCP_FLOWS="${TCP_FLOWS:-10}"
 UDP_FLOWS="${UDP_FLOWS:-10}"
-BIN="bin/drainwatch"
-
 fail() { echo "reproduce: $*" >&2; exit 1; }
 
 # ---------------------------------------------------------------------------
@@ -44,6 +42,11 @@ echo "reproduce: building drainwatch and the probe image"
 make --no-print-directory build
 make --no-print-directory probe-image
 
+# scripts/dwrun.sh decides where the orchestrator runs. On macOS it runs inside
+# the kind node, because Docker Desktop does not reliably forward published UDP
+# ports; see the comment at the top of that script.
+echo "reproduce: orchestrator backend = ${DRAINWATCH_RUNNER:-auto} (on $(uname -s))"
+
 rm -rf "$OUT"
 mkdir -p "$OUT"
 
@@ -55,7 +58,7 @@ for behavior in drain exit-now ignore; do
   echo "================================================================"
   echo "reproduce: trial arm '$behavior'"
   echo "================================================================"
-  "$BIN" run \
+  scripts/dwrun.sh \
     --drain-behavior "$behavior" \
     --grace-period "$GRACE" \
     --tcp-flows "$TCP_FLOWS" \

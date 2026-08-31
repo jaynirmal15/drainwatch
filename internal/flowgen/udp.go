@@ -149,6 +149,13 @@ func (u *udpFlow) consumeLine(line string, now time.Time) {
 			s = v
 		}
 	}
+	if len(fields) > 1 {
+		if changed, previous := u.noteInstance(fields[1]); changed {
+			u.record(KindRehomed, now, s,
+				fmt.Sprintf("answered by probe instance %s, was %s", fields[1], previous))
+			return
+		}
+	}
 	u.record(KindReply, now, s, "")
 	if s != NoSeq {
 		// Datagrams can be reordered; keep the highest answered sequence.

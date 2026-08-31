@@ -20,6 +20,16 @@ const (
 	DefaultInterval            = 500 * time.Millisecond
 	DefaultUDPSilenceDatagrams = 6
 	DefaultDialTimeout         = 5 * time.Second
+	// DefaultDialRetryWindow is how long Start keeps retrying a flow that will
+	// not connect.
+	//
+	// A connection refused immediately after the EndpointSlice reports a ready
+	// endpoint is not a broken harness: the EndpointSlice is control-plane
+	// state, and kube-proxy programs the corresponding data-plane rules
+	// asynchronously. Until it does, the NodePort rejects. Failing on the first
+	// refusal would make every trial a race against rule propagation, so Start
+	// retries within this bounded window and only then aborts.
+	DefaultDialRetryWindow = 20 * time.Second
 	// DefaultGapThreshold is how long a TCP flow may go without a heartbeat
 	// before a (non-terminal) gap is recorded. Three missed heartbeats.
 	DefaultGapThreshold = 1500 * time.Millisecond
@@ -38,6 +48,9 @@ type Config struct {
 	FlowTimeout         time.Duration
 	UDPSilenceDatagrams int
 	DialTimeout         time.Duration
+	// DialRetryWindow bounds how long a flow may keep failing to connect before
+	// Start gives up. Zero means DefaultDialRetryWindow.
+	DialRetryWindow time.Duration
 }
 
 // Validate checks the configuration and returns an error naming the invariant
@@ -132,9 +145,17 @@ func (g *Generator) Start(ctx context.Context) error {
 	runCtx, cancel := context.WithCancel(ctx)
 	g.cancel = cancel
 
+	window := g.cfg.DialRetryWindow
+	if window <= 0 {
+		window = DefaultDialRetryWindow
+	}
+
 	i := 0
 	for ; i < g.cfg.TCPFlows; i++ {
-		t, err := dialTCP(ctx, g.flows[i], g.tcpAddr(), g.cfg.DialTimeout)
+		flowRef := g.flows[i]
+		t, err := retryDial(ctx, window, func() (*tcpFlow, error) {
+			return dialTCP(ctx, flowRef, g.tcpAddr(), g.cfg.DialTimeout)
+		})
 		if err != nil {
 			g.teardown()
 			return fmt.Errorf("%w (invariant: every requested tcp flow must establish before measurement; check that the probe is Ready and that %s is reachable from this host)", err, g.tcpAddr())
@@ -142,7 +163,10 @@ func (g *Generator) Start(ctx context.Context) error {
 		g.tcp = append(g.tcp, t)
 	}
 	for j := 0; j < g.cfg.UDPFlows; j++ {
-		u, err := dialUDP(ctx, g.flows[i+j], g.udpAddr(), g.cfg.DialTimeout)
+		flowRef := g.flows[i+j]
+		u, err := retryDial(ctx, window, func() (*udpFlow, error) {
+			return dialUDP(ctx, flowRef, g.udpAddr(), g.cfg.DialTimeout)
+		})
 		if err != nil {
 			g.teardown()
 			return fmt.Errorf("%w (invariant: every requested udp flow must open a socket before measurement; check %s)", err, g.udpAddr())
@@ -159,6 +183,31 @@ func (g *Generator) Start(ctx context.Context) error {
 		go u.run(runCtx, &g.wg, g.cfg.Interval, g.cfg.UDPSilenceDatagrams)
 	}
 	return nil
+}
+
+// retryDial calls dial until it succeeds or the window expires. The error it
+// returns on give-up names the attempt count and the window, so that a genuinely
+// unreachable target is distinguishable from a slow one.
+func retryDial[T any](ctx context.Context, window time.Duration, dial func() (T, error)) (T, error) {
+	deadline := time.Now().Add(window)
+	var zero T
+	for attempt := 1; ; attempt++ {
+		v, err := dial()
+		if err == nil {
+			return v, nil
+		}
+		if ctx.Err() != nil {
+			return zero, fmt.Errorf("%w (cancelled after %d attempt(s))", err, attempt)
+		}
+		if !time.Now().Before(deadline) {
+			return zero, fmt.Errorf("%w (still failing after %d attempt(s) over %s)", err, attempt, window)
+		}
+		select {
+		case <-ctx.Done():
+			return zero, fmt.Errorf("%w (cancelled after %d attempt(s))", err, attempt)
+		case <-time.After(250 * time.Millisecond):
+		}
+	}
 }
 
 func (g *Generator) teardown() {

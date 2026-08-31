@@ -24,6 +24,7 @@ const (
 	KindReadTimeout    EventKind = "read_timeout" // no bytes for the whole flow timeout, no error
 	KindWriteError     EventKind = "write_error"  // EPIPE, ECONNRESET or ECONNREFUSED on write
 	KindSilence        EventKind = "silence"      // udp: N consecutive unanswered datagrams
+	KindRehomed        EventKind = "rehomed"      // the answering probe instance changed
 	KindObservationEnd EventKind = "observation_end"
 )
 
@@ -53,7 +54,7 @@ type Result struct {
 // terminalKinds is the closed set of kinds that end a flow.
 func (k EventKind) terminal() bool {
 	switch k {
-	case KindEOF, KindReset, KindReadTimeout, KindWriteError, KindSilence, KindObservationEnd:
+	case KindEOF, KindReset, KindReadTimeout, KindWriteError, KindSilence, KindRehomed, KindObservationEnd:
 		return true
 	}
 	return false
@@ -146,6 +147,13 @@ func Classify(proto string, evs []Event) Result {
 			res.Terminal = &t
 			res.Outcome = report.OutcomeSevered
 			res.Detail = orDefault(ev.Detail, "udp-silence")
+		case KindRehomed:
+			// A different probe process answered. The flow to the pod under
+			// test ended here; that something else answered afterwards is not
+			// survival, it is replacement.
+			res.Terminal = &t
+			res.Outcome = report.OutcomeSevered
+			res.Detail = orDefault(ev.Detail, "rehomed onto a different probe instance")
 		case KindReadTimeout:
 			res.Terminal = &t
 			res.Outcome = report.OutcomeReadTimeout

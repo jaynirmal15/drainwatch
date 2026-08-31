@@ -161,5 +161,6 @@ func (o *Options) flowConfig() flowgen.Config {
 		FlowTimeout:         o.FlowTimeout,
 		UDPSilenceDatagrams: o.UDPSilenceDatagrams,
 		DialTimeout:         flowgen.DefaultDialTimeout,
+		DialRetryWindow:     flowgen.DefaultDialRetryWindow,
 	}
 }

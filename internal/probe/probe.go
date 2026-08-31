@@ -89,6 +89,11 @@ type Config struct {
 	ExitNowForceRST bool
 	// HeartbeatInterval is the TCP heartbeat period.
 	HeartbeatInterval time.Duration
+	// Instance identifies this probe process on the wire. It is the pod name
+	// (POD_NAME, set by the downward API) or the hostname, so that a client can
+	// tell when its flow has been re-homed onto a replacement pod rather than
+	// assuming a reply means its original peer is still alive.
+	Instance string
 }
 
 // ConfigFromEnv resolves the probe configuration from the environment, applying
@@ -104,6 +109,17 @@ func ConfigFromEnv(getenv func(string) string) (Config, error) {
 		DrainMaxSeconds:   DefaultDrainMaxSeconds,
 		ExitNowForceRST:   true,
 		HeartbeatInterval: flowgen.DefaultInterval,
+	}
+
+	if v := strings.TrimSpace(getenv("POD_NAME")); v != "" {
+		c.Instance = v
+	} else if h, err := os.Hostname(); err == nil && h != "" {
+		c.Instance = h
+	} else {
+		// An unidentifiable probe would make re-homing undetectable, so say so
+		// rather than shipping an empty instance that silently disables the
+		// check.
+		return c, fmt.Errorf("cannot determine this probe's instance identity (invariant: the probe must identify its process on the wire so clients can detect being re-homed onto a replacement pod; set POD_NAME via the downward API)")
 	}
 
 	if v := strings.TrimSpace(getenv("DRAIN_BEHAVIOR")); v != "" {
@@ -206,8 +222,8 @@ func (s *Server) Run(ctx context.Context) int {
 	s.log.Event(report.ProbeEvent{
 		Event:         EventStarted,
 		DrainBehavior: s.cfg.Behavior,
-		Detail: fmt.Sprintf("tcp=%d udp=%d readyz=%d drain_max_seconds=%d exit_now_force_rst=%t",
-			s.cfg.TCPPort, s.cfg.UDPPort, s.cfg.ReadyPort, s.cfg.DrainMaxSeconds, s.cfg.ExitNowForceRST),
+		Detail: fmt.Sprintf("instance=%s tcp=%d udp=%d readyz=%d drain_max_seconds=%d exit_now_force_rst=%t",
+			s.cfg.Instance, s.cfg.TCPPort, s.cfg.UDPPort, s.cfg.ReadyPort, s.cfg.DrainMaxSeconds, s.cfg.ExitNowForceRST),
 	})
 
 	if err := s.Listen(); err != nil {
@@ -376,7 +392,7 @@ func (s *Server) serveConn(sc *srvConn) {
 				return
 			}
 			n := sc.seq.Load()
-			line := fmt.Sprintf("%s%d %d\n", flowgen.PrefixHeartbeat, n, time.Now().UnixNano())
+			line := fmt.Sprintf("%s%d %d %s\n", flowgen.PrefixHeartbeat, n, time.Now().UnixNano(), s.cfg.Instance)
 			_ = sc.conn.SetWriteDeadline(time.Now().Add(s.cfg.HeartbeatInterval * 4))
 			if _, err := io.WriteString(sc.conn, line); err != nil {
 				s.log.Event(report.ProbeEvent{
@@ -457,7 +473,7 @@ func (s *Server) udpLoop() {
 		}
 		line := strings.TrimRight(string(buf[:n]), "\r\n")
 		seq := strings.TrimPrefix(line, flowgen.PrefixPing)
-		if _, err := s.udpConn.WriteToUDP([]byte(flowgen.PrefixAck+seq+"\n"), addr); err != nil {
+		if _, err := s.udpConn.WriteToUDP([]byte(flowgen.PrefixAck+seq+" "+s.cfg.Instance+"\n"), addr); err != nil {
 			s.log.Simple("udp_write_error", err.Error())
 			continue
 		}

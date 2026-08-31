@@ -22,6 +22,28 @@ type flow struct {
 	mu       sync.Mutex
 	events   []Event
 	terminal bool
+	// instance is the probe process that has been answering this flow. The
+	// first non-empty value seen becomes the baseline; a later different value
+	// means the flow was re-homed onto a replacement pod.
+	instance string
+}
+
+// noteInstance records the answering probe instance and reports whether it
+// changed. A change is terminal: the flow to the pod under test has ended.
+func (f *flow) noteInstance(id string) (changed bool, previous string) {
+	if id == "" {
+		return false, ""
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.instance == "" {
+		f.instance = id
+		return false, ""
+	}
+	if f.instance == id {
+		return false, f.instance
+	}
+	return true, f.instance
 }
 
 func newFlow(proto string, index int) *flow {

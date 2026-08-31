@@ -1,7 +1,11 @@
 package flowgen
 
 import (
+	"context"
+	"errors"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/jaynirmal15/drainwatch/internal/report"
 )
@@ -102,5 +106,80 @@ func TestConfigValidateNamesTheInvariant(t *testing.T) {
 				t.Fatal("expected an error, got nil")
 			}
 		})
+	}
+}
+
+// TestRetryDialGivesUpWithAnInformativeError: the retry window must not turn an
+// unreachable target into an indefinite hang, and the error must say how hard
+// drainwatch tried.
+func TestRetryDialGivesUpWithAnInformativeError(t *testing.T) {
+	attempts := 0
+	_, err := retryDial(context.Background(), 600*time.Millisecond, func() (int, error) {
+		attempts++
+		return 0, errors.New("connect: connection refused")
+	})
+	if err == nil {
+		t.Fatal("expected retryDial to give up")
+	}
+	if attempts < 2 {
+		t.Errorf("made %d attempt(s), want the window to allow retries", attempts)
+	}
+	for _, want := range []string{"connection refused", "attempt(s) over"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error is missing %q: %v", want, err)
+		}
+	}
+}
+
+// TestRetryDialSucceedsAfterTransientRefusal models the real case: kube-proxy
+// has not yet programmed its rules, so the first dials are refused.
+func TestRetryDialSucceedsAfterTransientRefusal(t *testing.T) {
+	attempts := 0
+	got, err := retryDial(context.Background(), 5*time.Second, func() (string, error) {
+		attempts++
+		if attempts < 3 {
+			return "", errors.New("connect: connection refused")
+		}
+		return "connected", nil
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got != "connected" || attempts != 3 {
+		t.Errorf("got %q after %d attempts", got, attempts)
+	}
+}
+
+func TestRetryDialHonoursCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	_, err := retryDial(ctx, time.Minute, func() (int, error) { return 0, errors.New("refused") })
+	if err == nil || !strings.Contains(err.Error(), "cancelled") {
+		t.Fatalf("got %v, want a cancellation error", err)
+	}
+}
+
+// TestNoteInstanceDetectsReplacement: the first instance seen is the baseline,
+// repeats are silent, and a different instance is reported as a change. This is
+// what stops a UDP flow re-homed onto a replacement pod from being recorded as
+// an undisturbed one.
+func TestNoteInstanceDetectsReplacement(t *testing.T) {
+	f := newFlow("udp", 0)
+
+	if changed, _ := f.noteInstance(""); changed {
+		t.Error("an empty instance must not count as a change")
+	}
+	if changed, _ := f.noteInstance("probe-pq4m5"); changed {
+		t.Error("the first instance seen is the baseline, not a change")
+	}
+	if changed, prev := f.noteInstance("probe-pq4m5"); changed || prev != "probe-pq4m5" {
+		t.Errorf("the same instance must not be a change (changed=%t prev=%q)", changed, prev)
+	}
+	if changed, _ := f.noteInstance(""); changed {
+		t.Error("an empty instance must never be treated as a change")
+	}
+	changed, prev := f.noteInstance("probe-9q5nt")
+	if !changed || prev != "probe-pq4m5" {
+		t.Errorf("a different instance must be reported as a change (changed=%t prev=%q)", changed, prev)
 	}
 }

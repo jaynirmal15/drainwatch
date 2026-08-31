@@ -31,6 +31,13 @@ spec:
           imagePullPolicy: IfNotPresent
           args: ["probe"]
           env:
+            # The probe puts this on the wire with every heartbeat and ack, so a
+            # client can tell when its flow has been re-homed onto a replacement
+            # pod instead of assuming a reply means its original peer is alive.
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: DRAIN_BEHAVIOR
               value: "drain"
             - name: DRAIN_MAX_SECONDS

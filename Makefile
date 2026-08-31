@@ -70,7 +70,7 @@ kind-down:
 
 ## demo: kind-up, one trial with defaults, table on stdout, report in ./out
 demo: build kind-up
-	$(BIN) run --out $(OUT)
+	./scripts/dwrun.sh --out $(OUT)
 	@echo
 	@echo "report:  $(OUT)/report.json"
 	@echo "summary: $(OUT)/summary.json"

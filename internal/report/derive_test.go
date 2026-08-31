@@ -156,3 +156,22 @@ func TestFirstEventPicksTheEarliest(t *testing.T) {
 		t.Error("FirstEvent must return nil for an event that was not observed")
 	}
 }
+
+// TestBuildSummaryFlagsNegativeCrossHostInterval: SIGTERM comes from the probe's
+// clock and ready:false from the orchestrator's, so a small negative interval
+// means "within clock skew", not "the endpoint left rotation before SIGTERM".
+// The number is reported as measured; the note stops it being misread.
+func TestBuildSummaryFlagsNegativeCrossHostInterval(t *testing.T) {
+	timeline := []Event{
+		{TMs: 0, Source: SourceOrchestrator, Event: EventTriggerIssued},
+		{TMs: 47, Source: SourceProbe, Event: EventSigtermReceived, Approximate: true},
+		{TMs: 21, Source: SourceK8s, Event: EventEndpointSliceReadyFalse},
+	}
+	s := BuildSummary(timeline, nil)
+	if s.SigtermToReadyFalseMs == nil || *s.SigtermToReadyFalseMs != -26 {
+		t.Fatalf("interval = %v, want -26 reported as measured", s.SigtermToReadyFalseMs)
+	}
+	if !hasNoteContaining(s.Notes, "within clock skew") {
+		t.Errorf("expected a note explaining the negative interval, got %v", s.Notes)
+	}
+}

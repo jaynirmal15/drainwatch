@@ -151,6 +151,13 @@ func (t *tcpFlow) consumeLine(line string, now time.Time) {
 				s = v
 			}
 		}
+		if len(fields) > 2 {
+			if changed, previous := t.noteInstance(fields[2]); changed {
+				t.record(KindRehomed, now, s,
+					fmt.Sprintf("answered by probe instance %s, was %s", fields[2], previous))
+				return
+			}
+		}
 		t.record(KindHeartbeat, now, s, "")
 	case strings.HasPrefix(line, PrefixBye):
 		fields := strings.Fields(strings.TrimPrefix(line, PrefixBye))

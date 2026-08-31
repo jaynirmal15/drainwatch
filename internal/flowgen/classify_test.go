@@ -182,6 +182,21 @@ func TestClassifyOutcomes(t *testing.T) {
 			wantSeq:     0,
 		},
 		{
+			name:  "udp severed: re-homed onto a replacement pod is not survival",
+			proto: "udp",
+			events: []Event{
+				ev(KindConnected, 0, NoSeq, ""),
+				ev(KindReply, 500, 0, ""),
+				ev(KindReply, 25000, 49, ""),
+				ev(KindRehomed, 25500, 50, "answered by probe instance probe-9q5nt, was probe-pq4m5"),
+				ev(KindReply, 26000, 51, ""),
+			},
+			wantOutcome: report.OutcomeSevered,
+			wantTermMs:  25500,
+			wantSeq:     49,
+			wantDetail:  "answered by probe instance probe-9q5nt, was probe-pq4m5",
+		},
+		{
 			name:  "the first terminal wins: a later reset cannot rewrite a drain",
 			proto: "tcp",
 			events: []Event{

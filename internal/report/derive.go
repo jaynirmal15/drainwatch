@@ -1,6 +1,9 @@
 package report
 
-import "sort"
+import (
+	"fmt"
+	"sort"
+)
 
 // FirstEvent returns the first timeline event matching source and name, or nil.
 // The timeline is expected to be sorted by t_ms; FirstEvent does not assume it.
@@ -82,7 +85,16 @@ func BuildSummary(timeline []Event, flows []Flow) Summary {
 		s.Notes = append(s.Notes, "endpointslice_ready_false was not observed; the endpoint may have been removed without an intermediate not-ready state")
 	}
 	if sigterm != nil && readyFalse != nil {
-		s.SigtermToReadyFalseMs = Ptr(readyFalse.TMs - sigterm.TMs)
+		d := readyFalse.TMs - sigterm.TMs
+		s.SigtermToReadyFalseMs = Ptr(d)
+		if d < 0 {
+			// The probe's timestamp crosses an unsynchronised host boundary, so
+			// a small negative interval means the two events were closer
+			// together than the clock skew between the hosts, not that the
+			// endpoint left rotation before SIGTERM was delivered.
+			s.Notes = append(s.Notes, fmt.Sprintf(
+				"sigterm_to_ready_false_ms is negative (%d ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM.", d))
+		}
 	}
 	if removed != nil {
 		s.TriggerToEndpointRemovedMs = Ptr(removed.TMs)
