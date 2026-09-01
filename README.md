@@ -267,7 +267,7 @@ announcement on the wire before its FIN, and an abrupt exit does not.
 
 Those tests cannot cover kube-proxy, EndpointSlices or the grace-period boundary. Three
 defects in drainwatch were found only by running against a real cluster, and are recorded
-in commit `d36d40d` — including one where re-homed UDP flows were reported as having
+in commit `da46d38` — including one where re-homed UDP flows were reported as having
 survived untouched.
 
 ## Licence

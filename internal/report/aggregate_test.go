@@ -438,9 +438,9 @@ func TestEnvironmentDisagreementIsFlagged(t *testing.T) {
 func TestBuildDriftIsADisagreement(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "arm-P")
 	a1 := baseFixture()
-	a1.version, a1.commit = "0.1.0-4-g70142e0", "70142e0"
+	a1.version, a1.commit = "0.1.0-4-g2d47fd8", "2d47fd8"
 	a2 := baseFixture()
-	a2.version, a2.commit = "0.1.0-5-gc7b7e94", "c7b7e94"
+	a2.version, a2.commit = "0.1.0-5-gcf25695", "cf25695"
 	writeArm(t, dir, []trialFixture{a1, a2})
 
 	agg, err := LoadArm(dir)
@@ -454,7 +454,7 @@ func TestBuildDriftIsADisagreement(t *testing.T) {
 	if !strings.Contains(joined, "different drainwatch build") {
 		t.Errorf("the disagreement must name the cause: %s", joined)
 	}
-	if !strings.Contains(joined, "70142e0") || !strings.Contains(joined, "c7b7e94") {
+	if !strings.Contains(joined, "2d47fd8") || !strings.Contains(joined, "cf25695") {
 		t.Errorf("the disagreement must name both builds: %s", joined)
 	}
 }
@@ -483,8 +483,8 @@ func TestMatrixAnnouncesBuildDriftAcrossArms(t *testing.T) {
 		}
 		return a
 	}
-	one := mk("arm-A", "0.1.0-4-g70142e0", "70142e0")
-	two := mk("arm-B", "0.1.0-5-gc7b7e94", "c7b7e94")
+	one := mk("arm-A", "0.1.0-4-g2d47fd8", "2d47fd8")
+	two := mk("arm-B", "0.1.0-5-gcf25695", "cf25695")
 
 	var buf bytes.Buffer
 	RenderMatrix(&buf, []*ArmAggregate{one, two})
@@ -494,13 +494,13 @@ func TestMatrixAnnouncesBuildDriftAcrossArms(t *testing.T) {
 	}
 
 	var clean bytes.Buffer
-	RenderMatrix(&clean, []*ArmAggregate{one, mk("arm-C", "0.1.0-4-g70142e0", "70142e0")})
+	RenderMatrix(&clean, []*ArmAggregate{one, mk("arm-C", "0.1.0-4-g2d47fd8", "2d47fd8")})
 	if !strings.Contains(clean.String(), "all arms produced by one build") {
 		t.Error("a matrix from one build must say so")
 	}
 
 	var dirty bytes.Buffer
-	RenderMatrix(&dirty, []*ArmAggregate{mk("arm-D", "0.1.0-4-g70142e0", "70142e0-dirty")})
+	RenderMatrix(&dirty, []*ArmAggregate{mk("arm-D", "0.1.0-4-g2d47fd8", "2d47fd8-dirty")})
 	if !strings.Contains(dirty.String(), "uncommitted changes") {
 		t.Error("a dirty build must be announced")
 	}
