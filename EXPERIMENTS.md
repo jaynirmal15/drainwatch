@@ -1,8 +1,7 @@
 # drainwatch experiments
 
-This file holds the methodology and the recorded findings. The methodology is complete.
-The findings section is a template with no results in it yet, because none have been
-recorded on a real cluster — see [Status](#status).
+This file holds the methodology and the recorded findings. Two runs are recorded: an
+initial three-arm run at n=1, and a five-arm matrix at n=5 per arm.
 
 ---
 
@@ -12,12 +11,13 @@ recorded on a real cluster — see [Status](#status).
 | --- | --- |
 | Harness | v0.1, complete |
 | Unit and loopback tests | passing (`make test`) |
-| Cluster runs recorded | **3 arms, n=1 each**, 2026-08-31 |
-| Raw reports | [`results/2026-08-31-kind-v1.34.0/`](results/2026-08-31-kind-v1.34.0/) |
+| Cluster runs recorded | **3 arms, n=1 each**, 2026-08-31; **5 arms, n=5 each**, 2026-09-01 |
+| Raw reports (n=1) | [`results/2026-08-31-kind-v1.34.0/`](results/2026-08-31-kind-v1.34.0/) |
+| Raw reports (n=5) | [`results/2026-09-01-repeat5-kind-v1.34.0/`](results/2026-09-01-repeat5-kind-v1.34.0/) |
 
-Every number in the Findings section below is copied from a `report.json` in that
-directory, produced by a single `make reproduce` on a freshly created cluster. Each arm
-was run once; nothing here is an average, and nothing here is an estimate.
+Every number below is copied from a `report.json` in one of those directories. Nothing
+here is an estimate. The n=1 numbers are single observations; the n=5 numbers are
+medians with their full observed range, computed by `drainwatch aggregate`.
 
 ---
 
@@ -276,10 +276,179 @@ same way and are recorded in commit `d36d40d`.
 
 ---
 
+## Repeat-5 matrix
+
+Recorded 2026-09-01 by [`scripts/repeat5-matrix.sh`](scripts/repeat5-matrix.sh). Raw
+reports: [`results/2026-09-01-repeat5-kind-v1.34.0/`](results/2026-09-01-repeat5-kind-v1.34.0/),
+one directory per arm, five `trial-NNN/report.json` each, plus `aggregate.json` and
+`aggregate.txt` from `drainwatch aggregate`.
+
+### Run metadata
+
+| | |
+| --- | --- |
+| Date | 2026-09-01, 00:45Z to 01:15Z |
+| drainwatch version / commit | `0.1.0-10-g173d102` / `173d102` — one frozen build for all 25 trials |
+| Kubernetes version | v1.34.0 (kind v0.30.0, 2 nodes) — identical across all 25 |
+| kube-proxy mode | `iptables` — identical across all 25 |
+| Flows per trial | 10 TCP, 10 UDP |
+| Grace period | 30 s; probe drain window 25 s (`grace - 5`) |
+| Cluster | recreated fresh per arm; creation times in each `arm-*/cluster.txt` |
+
+All 25 trials carry the same `drainwatch_version`, `git_commit`, Kubernetes version and
+kube-proxy mode. The aggregator checks this and would have flagged any drift.
+
+### Core table — does the application's SIGTERM behaviour change the outcome?
+
+Median (min–max) in ms across 5 repeats. All intervals here are **same-clock**: both
+endpoints come from the orchestrator's own clock, exact relative to the trigger.
+
+| arm | behavior | trigger | TCP | UDP | first TCP end | last TCP end | endpoint removed | container exit | exit code |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A | `exit-now` | delete | 10/10 severed | 10/10 severed | 41 (30–96) | 45 (30–98) | 293 (251–591) | 285 (246–584) | 0 |
+| B | `drain` | delete | 10/10 drained | 10/10 severed | 25041 (25027–25110) | 25043 (25029–25113) | 25296 (25243–25466) | 25289 (25237–25460) | 0 |
+| C | `ignore` | delete | 10/10 severed | 10/10 severed | 30055 (30050–30062) | 30056 (30050–30062) | 30259 (30244–30312) | 30255 (30240–30305) | 137 |
+
+Every repeat in every arm agreed on outcome counts and exit code. The three arms differ
+only in `DRAIN_BEHAVIOR`, and they separate cleanly:
+
+* **A** — TCP is gone in a median of 45 ms, by RST. Nothing drains.
+* **B** — TCP survives to the end of the 25 s drain window and closes cleanly, announced.
+* **C** — TCP dies at 30056 ms, i.e. within 62 ms of the 30 s grace boundary, and the
+  container exits **137** (128 + SIGKILL) in all five repeats. This is the kubelet
+  killing the process, not the application ending anything.
+
+### Secondary table — does the trigger change the physics?
+
+| arm | behavior | trigger | TCP | UDP | last TCP end | endpoint removed | container exit | exit code |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| B | `drain` | delete | 10/10 drained | 10/10 severed | 25043 (25029–25113) | 25296 (25243–25466) | 25289 (25237–25460) | 0 |
+| D | `drain` | evict | 10/10 drained | 10/10 severed | 25037 (25034–25065) | 25243 (25223–25780) | 25239 (25216–25773) | 0 |
+| E | `drain` | scale | 10/10 drained | 10/10 severed | 25046 (25042–25051) | 25256 (25220–25356) | 25252 (25215–25320) | 0 |
+
+**For TCP, the trigger does not change the physics.** Delete, eviction and scale-to-zero
+produce last-TCP-end medians of 25043, 25037 and 25046 ms — a spread of 9 ms between
+arms, against a within-arm range of up to 84 ms. Whatever the API verb, the pod gets a
+SIGTERM and the drain runs to its window.
+
+**For UDP, the trigger changes everything.** See below.
+
+### The UDP finding, restated against arms D and E
+
+The n=1 run recorded UDP flows as severed with the detail *"answered by probe instance
+X, was Y"* — the flow was re-homed onto a **different pod** than the one it started
+with. The matrix confirms this and, through arm E, isolates its cause.
+
+| arm | trigger | replacement pod? | UDP severance route (all 5 repeats) | first UDP end | container exit | UDP end − container exit |
+| --- | --- | --- | --- | --- | --- | --- |
+| B | delete | yes | rehomed onto a different probe instance | 2417 (2411–2433) | 25289 (25237–25460) | **−22861 (−23045 to −22806)** |
+| D | evict | yes | rehomed onto a different probe instance | 2420 (2419–2436) | 25239 (25216–25773) | **−22811 (−23353 to −22790)** |
+| E | scale | **no** | `econnrefused` (ICMP port unreachable) | 25426 (25404–25431) | 25252 (25215–25320) | **+177 (+111 to +189)** |
+
+The last column is computed per repeat and then aggregated — it is the median of each
+repeat's own difference, not the difference between the two medians beside it. Both of
+its endpoints come from the orchestrator's clock, so it is exact.
+
+Read the last column carefully. In arms B and D the UDP flows stopped being served by
+their original pod roughly **23 seconds before that pod exited**. The probe was still
+alive, still answering TCP heartbeats, still inside its drain window — and the UDP
+datagrams were already being answered by a different pod. Eviction re-homes UDP exactly
+the way delete does; the median difference between the two is 3 ms.
+
+Arm E is the control. Scaling to zero creates no replacement, so there is nothing to
+re-home onto, and the re-homing path cannot occur. It does not. Instead every UDP flow
+in all five repeats died by **ICMP port unreachable**, a median of 177 ms *after* the
+container exited — kube-proxy rejecting traffic to a Service with no endpoints. Not silence: an
+explicit rejection, which is why it lands a few hundred milliseconds after the exit
+rather than at the 3 s silence threshold the harness would otherwise have applied.
+
+The conclusion is not "UDP drains badly". It is that **a UDP flow has no drain at all**:
+with a replacement present it is silently migrated to a different backend while the old
+one is still running and still healthy, and with no replacement present it is rejected
+outright. Neither is a drain, and the application cannot influence either — all three of
+arms B, D and E ran `DRAIN_BEHAVIOR=drain`.
+
+Traceable to: [`arm-B/trial-001/report.json`](results/2026-09-01-repeat5-kind-v1.34.0/arm-B/trial-001/report.json),
+[`arm-D/trial-001/report.json`](results/2026-09-01-repeat5-kind-v1.34.0/arm-D/trial-001/report.json),
+[`arm-E/trial-001/report.json`](results/2026-09-01-repeat5-kind-v1.34.0/arm-E/trial-001/report.json)
+and their four siblings each.
+
+One qualification the aggregator raised and this file will not bury: in arm A,
+`trial-001` recorded **both** routes across its ten UDP flows (`econnrefused` on some,
+re-homing on others), while `trial-002` through `trial-005` recorded re-homing only. The
+outcome counts are identical in all five (10/10 severed); only the route differed. In
+arm A the pod exits within ~285 ms, so the window in which the endpoint is gone but the
+replacement is not yet ready is open long enough for some flows to be rejected before
+others are re-homed. It is a race, and it resolved differently in one repeat out of five.
+
+### The endpoint-lag finding, restated with spread
+
+In the `exit-now` arm, the process is dead long before the Service stops advertising it.
+
+| metric (arm A, n=5) | median | min | max |
+| --- | --- | --- | --- |
+| last TCP flow dead at | 45 ms | 30 ms | 98 ms |
+| endpoint removed from EndpointSlice at | 293 ms | 251 ms | 591 ms |
+| **window where the Service advertised a dead process** | **221 ms** | **195 ms** | **521 ms** |
+
+The bottom row is measured per repeat and then aggregated, not derived by subtracting the
+two medians above it. Both of its endpoints come from the orchestrator's clock, so the
+window is exact.
+
+For a median of 221 ms, and in the worst of five repeats 521 ms, the EndpointSlice named
+an endpoint whose process had already sent RST to every connection it held. Any traffic
+routed on that advertisement in that window had nowhere to land. The same window exists
+in the other arms (arm B 253 ms, arm C 206 ms, arm D 206 ms, arm E 211 ms), but it only
+matters in `exit-now`, because that is the only arm where the process is already dead
+while it is open.
+
+### What changed from n=1
+
+Most numbers did not move. The `exit-now` last-TCP-end was 46 ms at n=1 and 45 (30–98) at
+n=5; the `ignore` boundary was 30058 ms and is 30056 (30050–30062); the `drain` TCP
+outcome, the UDP re-homing mechanism and every outcome count are unchanged.
+
+Two things moved enough to state plainly:
+
+1. **The n=1 `drain` arm's cluster-side timings sat above the n=5 range.** Endpoint
+   removal was 25739 ms at n=1 against 25296 (25243–25466) at n=5 — 273 ms above the n=5
+   maximum. Container exit was 25599 ms against 25289 (25237–25460), 139 ms above the
+   maximum. The likely reason is procedural: the n=1 run executed all three arms on a
+   single cluster via `make reproduce`, so the `drain` arm ran third on a cluster that had
+   already torn down two workloads, whereas the matrix gives every arm a fresh cluster.
+   That is a hypothesis about the difference, not a measurement of it; nothing here tested
+   it.
+
+2. **The spread is wider than a single run suggests.** `exit-now` endpoint removal was
+   376 ms at n=1, which reads like a stable figure until five repeats put it at 293
+   (251–591) — a range of 340 ms, with the n=1 observation sitting near the middle. Any
+   single-run number from this harness should be read as one draw from a distribution
+   that is a few hundred milliseconds wide on the cluster-side events, and much tighter
+   (tens of ms) on the flow-side ones.
+
+Nothing in the n=1 findings was contradicted.
+
+---
+
 ## Reproducing
+
+The three-arm run at n=1:
 
 ```bash
 make reproduce
+```
+
+The five-arm matrix at n=5 per arm (roughly 30 minutes; fresh cluster per arm):
+
+```bash
+scripts/repeat5-matrix.sh
+```
+
+It refuses to start from a dirty working tree, freezes one binary and one probe image for
+all 25 trials, and aggregates with:
+
+```bash
+drainwatch aggregate results/<dir>/arm-A results/<dir>/arm-B results/<dir>/arm-C results/<dir>/arm-D results/<dir>/arm-E
 ```
 
 Six to eight minutes. Creates a clean kind cluster, builds the image, runs the three arms,

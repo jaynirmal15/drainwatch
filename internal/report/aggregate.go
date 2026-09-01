@@ -193,6 +193,30 @@ var metricSpecs = []metricSpec{
 		},
 	},
 	{
+		name: "udp_first_terminal_minus_container_exit_ms", basis: ClockSameProcess,
+		desc: "when the first UDP flow stopped being served, relative to the container actually exiting (negative means the flow was already gone while the process was still running)",
+		extract: func(r *Report) *int64 {
+			first := flowTerminalExtremum(r, "udp", false)
+			exit := r.Trial.Summary.TriggerToContainerTerminated
+			if first == nil || exit == nil {
+				return nil
+			}
+			return Ptr(*first - *exit)
+		},
+	},
+	{
+		name: "udp_last_terminal_minus_container_exit_ms", basis: ClockSameProcess,
+		desc: "when the last UDP flow stopped being served, relative to the container actually exiting",
+		extract: func(r *Report) *int64 {
+			last := flowTerminalExtremum(r, "udp", true)
+			exit := r.Trial.Summary.TriggerToContainerTerminated
+			if last == nil || exit == nil {
+				return nil
+			}
+			return Ptr(*last - *exit)
+		},
+	},
+	{
 		name: "trigger_to_sigterm_ms", basis: ClockCrossHost,
 		desc:    "trigger -> SIGTERM delivered to the probe",
 		extract: func(r *Report) *int64 { return r.Trial.Summary.TriggerToSigtermMs },

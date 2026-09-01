@@ -1,0 +1,664 @@
+
+=== trial-001 (1 of 5): behavior=ignore trigger=delete grace=30s ===
+preflight [ ok ] probe-pod-ready                      1000ms
+preflight [ ok ] k8s-watches-delivering                  0ms
+preflight [ ok ] service-endpoint-stable              2000ms
+preflight [ ok ] flows-dialed                            5ms
+preflight [ ok ] tcp-flows-established                 551ms
+preflight [ ok ] udp-flows-replying                      0ms
+trigger: delete drainwatch/drainwatch-probe-65dc9ffcdb-x65fk at 2026-09-01T00:59:32.335840257Z
+all flows terminal at t+30383ms
+
+drainwatch 0.1.0-10-g173d102 (173d102)  trial trial-001
+==============================================================================
+ENVIRONMENT
+  kubernetes                  v1.34.0
+  nodes                       2
+    drainwatch-control-plane  containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+    drainwatch-worker         containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+  kube-proxy mode             iptables
+  cni                         kindnet (identified by DaemonSet name; best effort)
+  host                        linux/amd64
+  started                     2026-09-01T00:59:18.516692126Z
+
+CONFIG
+  flows             10 tcp, 10 udp
+  drain behavior    ignore (DRAIN_MAX_SECONDS=25)
+  trigger           delete
+  grace period      30 s
+  settle / observe  10 s / 60 s
+  target            127.0.0.1 tcp:30071 udp:30072 (ns drainwatch)
+
+TIMELINE (t_ms relative to trigger_issued)
+  T_MS      SOURCE        EVENT                           DETAIL
+  -13734    orchestrator  workload_applied                deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s
+  -13728    k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-x65fk phase=Pending
+  -13724    k8s           endpointslice_observed          drainwatch-probe-ln5c6 endpoints=0
+  -12986 ~  probe         probe_started                   probe_version=0.1.0-10-g173d102 probe_commit=173d102 instance=drainwatch-probe-65dc9ffcdb-x65fk tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true
+  -12985 ~  probe         listening                       tcp=:7001 udp=:7002 readyz=:7003
+  -10075    orchestrator  preflight_passed                10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering
+  -10075    orchestrator  probe_log_stream_opened         following container probe of pod drainwatch-probe-65dc9ffcdb-x65fk
+  0         orchestrator  settle_complete                 held 10 tcp and 10 udp flows for 10s with no flow terminating
+  0         orchestrator  trigger_issued                  trigger=delete target=drainwatch/drainwatch-probe-65dc9ffcdb-x65fk
+  16        orchestrator  trigger_api_returned            api call returned success
+  19        k8s           pod_deletion_timestamp_set      drainwatch-probe-65dc9ffcdb-x65fk deletionGracePeriodSeconds=30
+  23        k8s           endpointslice_ready_false       Pod/drainwatch-probe-65dc9ffcdb-x65fk in drainwatch-probe-ln5c6 (terminating=true) serving=true
+  33        k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-2f2cp phase=Pending
+  33 ~      probe         sigterm_ignored                 continuing to serve; readiness remains 200; waiting for SIGKILL at the grace-period boundary
+  33 ~      probe         sigterm_received                signal=terminated
+  30055     client        flow_terminal                   tcp-0004 severed: eof-without-drain-announcement
+  30055     client        flow_terminal                   tcp-0005 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0001 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0002 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0003 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0006 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0007 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0008 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0009 severed: eof-without-drain-announcement
+  30056     client        flow_terminal                   tcp-0010 severed: eof-without-drain-announcement
+  30257     k8s           container_terminated            probe exitCode=137 reason=Error signal=0 finishedAt=2026-09-01T01:00:02Z
+  30257     k8s           pod_ready_false                 drainwatch-probe-65dc9ffcdb-x65fk
+  30262     k8s           endpointslice_endpoint_removed  Pod/drainwatch-probe-65dc9ffcdb-x65fk removed from drainwatch-probe-ln5c6
+  30374     client        flow_terminal                   udp-0007 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30374     client        flow_terminal                   udp-0008 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0001 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0002 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0003 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0004 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0005 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0006 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0009 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30375     client        flow_terminal                   udp-0010 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  30383     orchestrator  all_flows_terminal              all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events
+  30503     k8s           pod_object_deleted              drainwatch-probe-65dc9ffcdb-x65fk removed from the API
+  35448     orchestrator  observation_window_closed       window=60s; flows still alive at this instant are recorded as survived-observation-window
+  35448     orchestrator  probe_log_stream_ended          collected 842 probe events
+  (~ marks a cross-host approximate timestamp; see clock_note)
+
+FLOWS
+  ID        PROTO  OUTCOME  T_TERMINAL  LAST_SEQ  DETAIL
+  tcp-0001  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0002  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0003  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0004  tcp    severed  30055 ms    80        eof-without-drain-announcement
+  tcp-0005  tcp    severed  30055 ms    80        eof-without-drain-announcement
+  tcp-0006  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0007  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0008  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0009  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  tcp-0010  tcp    severed  30056 ms    80        eof-without-drain-announcement
+  udp-0001  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0002  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0003  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0004  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0005  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0006  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0007  udp    severed  30374 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0008  udp    severed  30374 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0009  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+  udp-0010  udp    severed  30375 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-2f2cp, was drainwatch-probe-65dc9ffcdb-x65fk
+
+SUMMARY
+  PROTO  TOTAL  DRAINED  SEVERED  READ_TIMEOUT  SURVIVED_WINDOW  NOT_MEASURED
+  tcp    10     0        10       0             0                0
+  udp    10     0        10       0             0                0
+
+  trigger -> sigterm               33 ms
+  sigterm -> endpoint ready:false  -10 ms
+  trigger -> endpoint removed      30262 ms
+  trigger -> container terminated  30257 ms
+  sigterm -> last flow terminal    30342 ms
+  NOTE: sigterm_to_ready_false_ms is negative (-10 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM.
+
+CLOCKS
+  t_ms is milliseconds relative to trigger_issued. Events from sources
+  'orchestrator' and 'client' are taken from a single monotonic clock in the
+  orchestrator process and are exact relative to the trigger. Events from
+  source 'k8s' are stamped with the orchestrator's monotonic clock at the
+  moment the watch event was received, so they include API-server write
+  latency and watch dispatch latency and are an upper bound on when the
+  change actually occurred. Events from source 'probe' are marked
+  approximate: their t_ms is obtained by differencing wall clocks on two
+  different hosts with no synchronisation guarantee, and should be read as
+  accurate to tens of milliseconds, not sub-millisecond.
+  Probe timestamps were mapped onto the orchestrator timebase as (probe wall
+  clock - orchestrator wall clock at trigger_issued). Deltas between two
+  probe events are exact because they share the probe's monotonic clock;
+  deltas between a probe event and any other source carry the unmeasured
+  host-to-host clock offset.
+
+report written to /out/arm-C/trial-001/report.json
+
+=== trial-002 (2 of 5): behavior=ignore trigger=delete grace=30s ===
+preflight [ ok ] probe-pod-ready                      1001ms
+preflight [ ok ] k8s-watches-delivering                  0ms
+preflight [ ok ] service-endpoint-stable              2000ms
+preflight [ ok ] flows-dialed                            3ms
+preflight [ ok ] tcp-flows-established                 500ms
+preflight [ ok ] udp-flows-replying                     51ms
+trigger: delete drainwatch/drainwatch-probe-65dc9ffcdb-m2wrb at 2026-09-01T01:00:52.782841075Z
+all flows terminal at t+30498ms
+
+drainwatch 0.1.0-10-g173d102 (173d102)  trial trial-002
+==============================================================================
+ENVIRONMENT
+  kubernetes                  v1.34.0
+  nodes                       2
+    drainwatch-control-plane  containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+    drainwatch-worker         containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+  kube-proxy mode             iptables
+  cni                         kindnet (identified by DaemonSet name; best effort)
+  host                        linux/amd64
+  started                     2026-09-01T00:59:18.516692126Z
+
+CONFIG
+  flows             10 tcp, 10 udp
+  drain behavior    ignore (DRAIN_MAX_SECONDS=25)
+  trigger           delete
+  grace period      30 s
+  settle / observe  10 s / 60 s
+  target            127.0.0.1 tcp:30071 udp:30072 (ns drainwatch)
+
+TIMELINE (t_ms relative to trigger_issued)
+  T_MS      SOURCE        EVENT                           DETAIL
+  -13677    orchestrator  workload_applied                deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s
+  -13674    k8s           endpointslice_observed          drainwatch-probe-ln5c6 endpoints=0
+  -13662    k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-m2wrb phase=Pending
+  -12974 ~  probe         probe_started                   probe_version=0.1.0-10-g173d102 probe_commit=173d102 instance=drainwatch-probe-65dc9ffcdb-m2wrb tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true
+  -12973 ~  probe         listening                       tcp=:7001 udp=:7002 readyz=:7003
+  -10017    orchestrator  preflight_passed                10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering
+  -10016    orchestrator  probe_log_stream_opened         following container probe of pod drainwatch-probe-65dc9ffcdb-m2wrb
+  0         orchestrator  settle_complete                 held 10 tcp and 10 udp flows for 10s with no flow terminating
+  0         orchestrator  trigger_issued                  trigger=delete target=drainwatch/drainwatch-probe-65dc9ffcdb-m2wrb
+  11        orchestrator  trigger_api_returned            api call returned success
+  13        k8s           pod_deletion_timestamp_set      drainwatch-probe-65dc9ffcdb-m2wrb deletionGracePeriodSeconds=30
+  22        k8s           endpointslice_ready_false       Pod/drainwatch-probe-65dc9ffcdb-m2wrb in drainwatch-probe-ln5c6 (terminating=true) serving=true
+  25        k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-rj6tc phase=Pending
+  30 ~      probe         sigterm_ignored                 continuing to serve; readiness remains 200; waiting for SIGKILL at the grace-period boundary
+  30 ~      probe         sigterm_received                signal=terminated
+  30057     client        flow_terminal                   tcp-0001 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0002 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0003 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0004 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0005 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0006 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0007 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0008 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0009 severed: eof-without-drain-announcement
+  30057     client        flow_terminal                   tcp-0010 severed: eof-without-drain-announcement
+  30196     k8s           pod_ready_false                 drainwatch-probe-65dc9ffcdb-m2wrb
+  30240     k8s           container_terminated            probe exitCode=137 reason=Error signal=0 finishedAt=2026-09-01T01:01:22Z
+  30244     k8s           endpointslice_endpoint_removed  Pod/drainwatch-probe-65dc9ffcdb-m2wrb removed from drainwatch-probe-ln5c6
+  30433     client        flow_terminal                   udp-0001 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0002 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0003 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0004 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0005 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0006 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0007 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0008 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0009 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30433     client        flow_terminal                   udp-0010 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  30498     orchestrator  all_flows_terminal              all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events
+  30685     k8s           pod_object_deleted              drainwatch-probe-65dc9ffcdb-m2wrb removed from the API
+  35569     orchestrator  observation_window_closed       window=60s; flows still alive at this instant are recorded as survived-observation-window
+  35569     orchestrator  probe_log_stream_ended          collected 842 probe events
+  (~ marks a cross-host approximate timestamp; see clock_note)
+
+FLOWS
+  ID        PROTO  OUTCOME  T_TERMINAL  LAST_SEQ  DETAIL
+  tcp-0001  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0002  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0003  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0004  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0005  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0006  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0007  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0008  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0009  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  tcp-0010  tcp    severed  30057 ms    80        eof-without-drain-announcement
+  udp-0001  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0002  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0003  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0004  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0005  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0006  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0007  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0008  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0009  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+  udp-0010  udp    severed  30433 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rj6tc, was drainwatch-probe-65dc9ffcdb-m2wrb
+
+SUMMARY
+  PROTO  TOTAL  DRAINED  SEVERED  READ_TIMEOUT  SURVIVED_WINDOW  NOT_MEASURED
+  tcp    10     0        10       0             0                0
+  udp    10     0        10       0             0                0
+
+  trigger -> sigterm               30 ms
+  sigterm -> endpoint ready:false  -8 ms
+  trigger -> endpoint removed      30244 ms
+  trigger -> container terminated  30240 ms
+  sigterm -> last flow terminal    30403 ms
+  NOTE: sigterm_to_ready_false_ms is negative (-8 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM.
+
+CLOCKS
+  t_ms is milliseconds relative to trigger_issued. Events from sources
+  'orchestrator' and 'client' are taken from a single monotonic clock in the
+  orchestrator process and are exact relative to the trigger. Events from
+  source 'k8s' are stamped with the orchestrator's monotonic clock at the
+  moment the watch event was received, so they include API-server write
+  latency and watch dispatch latency and are an upper bound on when the
+  change actually occurred. Events from source 'probe' are marked
+  approximate: their t_ms is obtained by differencing wall clocks on two
+  different hosts with no synchronisation guarantee, and should be read as
+  accurate to tens of milliseconds, not sub-millisecond.
+  Probe timestamps were mapped onto the orchestrator timebase as (probe wall
+  clock - orchestrator wall clock at trigger_issued). Deltas between two
+  probe events are exact because they share the probe's monotonic clock;
+  deltas between a probe event and any other source carry the unmeasured
+  host-to-host clock offset.
+
+report written to /out/arm-C/trial-002/report.json
+
+=== trial-003 (3 of 5): behavior=ignore trigger=delete grace=30s ===
+preflight [ ok ] probe-pod-ready                      1751ms
+preflight [ ok ] k8s-watches-delivering                  0ms
+preflight [ ok ] service-endpoint-stable              2000ms
+preflight [ ok ] flows-dialed                            6ms
+preflight [ ok ] tcp-flows-established                 550ms
+preflight [ ok ] udp-flows-replying                      0ms
+trigger: delete drainwatch/drainwatch-probe-65dc9ffcdb-k96vt at 2026-09-01T01:02:14.012304081Z
+all flows terminal at t+30472ms
+
+drainwatch 0.1.0-10-g173d102 (173d102)  trial trial-003
+==============================================================================
+ENVIRONMENT
+  kubernetes                  v1.34.0
+  nodes                       2
+    drainwatch-control-plane  containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+    drainwatch-worker         containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+  kube-proxy mode             iptables
+  cni                         kindnet (identified by DaemonSet name; best effort)
+  host                        linux/amd64
+  started                     2026-09-01T00:59:18.516692126Z
+
+CONFIG
+  flows             10 tcp, 10 udp
+  drain behavior    ignore (DRAIN_MAX_SECONDS=25)
+  trigger           delete
+  grace period      30 s
+  settle / observe  10 s / 60 s
+  target            127.0.0.1 tcp:30071 udp:30072 (ns drainwatch)
+
+TIMELINE (t_ms relative to trigger_issued)
+  T_MS      SOURCE        EVENT                           DETAIL
+  -14436    orchestrator  workload_applied                deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s
+  -14433    k8s           endpointslice_observed          drainwatch-probe-ln5c6 endpoints=0
+  -14421    k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-k96vt phase=Pending
+  -13659 ~  probe         probe_started                   probe_version=0.1.0-10-g173d102 probe_commit=173d102 instance=drainwatch-probe-65dc9ffcdb-k96vt tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true
+  -13658 ~  probe         listening                       tcp=:7001 udp=:7002 readyz=:7003
+  -10026    orchestrator  preflight_passed                10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering
+  -10026    orchestrator  probe_log_stream_opened         following container probe of pod drainwatch-probe-65dc9ffcdb-k96vt
+  0         orchestrator  settle_complete                 held 10 tcp and 10 udp flows for 10s with no flow terminating
+  0         orchestrator  trigger_issued                  trigger=delete target=drainwatch/drainwatch-probe-65dc9ffcdb-k96vt
+  12        orchestrator  trigger_api_returned            api call returned success
+  16        k8s           pod_deletion_timestamp_set      drainwatch-probe-65dc9ffcdb-k96vt deletionGracePeriodSeconds=30
+  20        k8s           endpointslice_ready_false       Pod/drainwatch-probe-65dc9ffcdb-k96vt in drainwatch-probe-ln5c6 (terminating=true) serving=true
+  25        k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-rr7ps phase=Pending
+  30 ~      probe         sigterm_ignored                 continuing to serve; readiness remains 200; waiting for SIGKILL at the grace-period boundary
+  30 ~      probe         sigterm_received                signal=terminated
+  30052     client        flow_terminal                   tcp-0001 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0002 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0003 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0004 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0005 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0006 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0007 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0008 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0009 severed: eof-without-drain-announcement
+  30052     client        flow_terminal                   tcp-0010 severed: eof-without-drain-announcement
+  30244     k8s           container_terminated            probe exitCode=137 reason=Error signal=0 finishedAt=2026-09-01T01:02:44Z
+  30244     k8s           pod_ready_false                 drainwatch-probe-65dc9ffcdb-k96vt
+  30248     k8s           endpointslice_endpoint_removed  Pod/drainwatch-probe-65dc9ffcdb-k96vt removed from drainwatch-probe-ln5c6
+  30426     client        flow_terminal                   udp-0001 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0002 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0003 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0004 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0005 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0006 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0007 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0008 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0009 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30426     client        flow_terminal                   udp-0010 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  30472     orchestrator  all_flows_terminal              all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events
+  30505     k8s           pod_object_deleted              drainwatch-probe-65dc9ffcdb-k96vt removed from the API
+  35543     orchestrator  observation_window_closed       window=60s; flows still alive at this instant are recorded as survived-observation-window
+  35547     orchestrator  probe_log_stream_ended          collected 842 probe events
+  (~ marks a cross-host approximate timestamp; see clock_note)
+
+FLOWS
+  ID        PROTO  OUTCOME  T_TERMINAL  LAST_SEQ  DETAIL
+  tcp-0001  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0002  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0003  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0004  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0005  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0006  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0007  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0008  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0009  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  tcp-0010  tcp    severed  30052 ms    80        eof-without-drain-announcement
+  udp-0001  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0002  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0003  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0004  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0005  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0006  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0007  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0008  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0009  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+  udp-0010  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-rr7ps, was drainwatch-probe-65dc9ffcdb-k96vt
+
+SUMMARY
+  PROTO  TOTAL  DRAINED  SEVERED  READ_TIMEOUT  SURVIVED_WINDOW  NOT_MEASURED
+  tcp    10     0        10       0             0                0
+  udp    10     0        10       0             0                0
+
+  trigger -> sigterm               30 ms
+  sigterm -> endpoint ready:false  -10 ms
+  trigger -> endpoint removed      30248 ms
+  trigger -> container terminated  30244 ms
+  sigterm -> last flow terminal    30396 ms
+  NOTE: sigterm_to_ready_false_ms is negative (-10 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM.
+
+CLOCKS
+  t_ms is milliseconds relative to trigger_issued. Events from sources
+  'orchestrator' and 'client' are taken from a single monotonic clock in the
+  orchestrator process and are exact relative to the trigger. Events from
+  source 'k8s' are stamped with the orchestrator's monotonic clock at the
+  moment the watch event was received, so they include API-server write
+  latency and watch dispatch latency and are an upper bound on when the
+  change actually occurred. Events from source 'probe' are marked
+  approximate: their t_ms is obtained by differencing wall clocks on two
+  different hosts with no synchronisation guarantee, and should be read as
+  accurate to tens of milliseconds, not sub-millisecond.
+  Probe timestamps were mapped onto the orchestrator timebase as (probe wall
+  clock - orchestrator wall clock at trigger_issued). Deltas between two
+  probe events are exact because they share the probe's monotonic clock;
+  deltas between a probe event and any other source carry the unmeasured
+  host-to-host clock offset.
+
+report written to /out/arm-C/trial-003/report.json
+
+=== trial-004 (4 of 5): behavior=ignore trigger=delete grace=30s ===
+preflight [ ok ] probe-pod-ready                       751ms
+preflight [ ok ] k8s-watches-delivering                  0ms
+preflight [ ok ] service-endpoint-stable              2001ms
+preflight [ ok ] flows-dialed                            5ms
+preflight [ ok ] tcp-flows-established                 501ms
+preflight [ ok ] udp-flows-replying                     51ms
+trigger: delete drainwatch/drainwatch-probe-65dc9ffcdb-blxgh at 2026-09-01T01:03:34.29629063Z
+all flows terminal at t+30502ms
+
+drainwatch 0.1.0-10-g173d102 (173d102)  trial trial-004
+==============================================================================
+ENVIRONMENT
+  kubernetes                  v1.34.0
+  nodes                       2
+    drainwatch-control-plane  containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+    drainwatch-worker         containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+  kube-proxy mode             iptables
+  cni                         kindnet (identified by DaemonSet name; best effort)
+  host                        linux/amd64
+  started                     2026-09-01T00:59:18.516692126Z
+
+CONFIG
+  flows             10 tcp, 10 udp
+  drain behavior    ignore (DRAIN_MAX_SECONDS=25)
+  trigger           delete
+  grace period      30 s
+  settle / observe  10 s / 60 s
+  target            127.0.0.1 tcp:30071 udp:30072 (ns drainwatch)
+
+TIMELINE (t_ms relative to trigger_issued)
+  T_MS      SOURCE        EVENT                           DETAIL
+  -13448    orchestrator  workload_applied                deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s
+  -13445    k8s           endpointslice_observed          drainwatch-probe-ln5c6 endpoints=0
+  -13434    k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-blxgh phase=Pending
+  -12771 ~  probe         probe_started                   probe_version=0.1.0-10-g173d102 probe_commit=173d102 instance=drainwatch-probe-65dc9ffcdb-blxgh tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true
+  -12770 ~  probe         listening                       tcp=:7001 udp=:7002 readyz=:7003
+  -10035    orchestrator  preflight_passed                10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering
+  -10035    orchestrator  probe_log_stream_opened         following container probe of pod drainwatch-probe-65dc9ffcdb-blxgh
+  0         orchestrator  settle_complete                 held 10 tcp and 10 udp flows for 10s with no flow terminating
+  0         orchestrator  trigger_issued                  trigger=delete target=drainwatch/drainwatch-probe-65dc9ffcdb-blxgh
+  11        orchestrator  trigger_api_returned            api call returned success
+  13        k8s           pod_deletion_timestamp_set      drainwatch-probe-65dc9ffcdb-blxgh deletionGracePeriodSeconds=30
+  21        k8s           endpointslice_ready_false       Pod/drainwatch-probe-65dc9ffcdb-blxgh in drainwatch-probe-ln5c6 (terminating=true) serving=true
+  24        k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-ftjbd phase=Pending
+  28 ~      probe         sigterm_ignored                 continuing to serve; readiness remains 200; waiting for SIGKILL at the grace-period boundary
+  28 ~      probe         sigterm_received                signal=terminated
+  30050     client        flow_terminal                   tcp-0001 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0002 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0003 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0004 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0005 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0006 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0007 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0008 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0009 severed: eof-without-drain-announcement
+  30050     client        flow_terminal                   tcp-0010 severed: eof-without-drain-announcement
+  30255     k8s           container_terminated            probe exitCode=137 reason=Error signal=0 finishedAt=2026-09-01T01:04:04Z
+  30255     k8s           pod_ready_false                 drainwatch-probe-65dc9ffcdb-blxgh
+  30259     k8s           endpointslice_endpoint_removed  Pod/drainwatch-probe-65dc9ffcdb-blxgh removed from drainwatch-probe-ln5c6
+  30415     client        flow_terminal                   udp-0001 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0002 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0003 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0004 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0005 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0006 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0007 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0008 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0009 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30415     client        flow_terminal                   udp-0010 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  30502     orchestrator  all_flows_terminal              all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events
+  30542     k8s           pod_object_deleted              drainwatch-probe-65dc9ffcdb-blxgh removed from the API
+  35555     orchestrator  observation_window_closed       window=60s; flows still alive at this instant are recorded as survived-observation-window
+  35555     orchestrator  probe_log_stream_ended          collected 842 probe events
+  (~ marks a cross-host approximate timestamp; see clock_note)
+
+FLOWS
+  ID        PROTO  OUTCOME  T_TERMINAL  LAST_SEQ  DETAIL
+  tcp-0001  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0002  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0003  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0004  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0005  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0006  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0007  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0008  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0009  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  tcp-0010  tcp    severed  30050 ms    80        eof-without-drain-announcement
+  udp-0001  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0002  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0003  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0004  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0005  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0006  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0007  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0008  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0009  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+  udp-0010  udp    severed  30415 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-ftjbd, was drainwatch-probe-65dc9ffcdb-blxgh
+
+SUMMARY
+  PROTO  TOTAL  DRAINED  SEVERED  READ_TIMEOUT  SURVIVED_WINDOW  NOT_MEASURED
+  tcp    10     0        10       0             0                0
+  udp    10     0        10       0             0                0
+
+  trigger -> sigterm               28 ms
+  sigterm -> endpoint ready:false  -7 ms
+  trigger -> endpoint removed      30259 ms
+  trigger -> container terminated  30255 ms
+  sigterm -> last flow terminal    30387 ms
+  NOTE: sigterm_to_ready_false_ms is negative (-7 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM.
+
+CLOCKS
+  t_ms is milliseconds relative to trigger_issued. Events from sources
+  'orchestrator' and 'client' are taken from a single monotonic clock in the
+  orchestrator process and are exact relative to the trigger. Events from
+  source 'k8s' are stamped with the orchestrator's monotonic clock at the
+  moment the watch event was received, so they include API-server write
+  latency and watch dispatch latency and are an upper bound on when the
+  change actually occurred. Events from source 'probe' are marked
+  approximate: their t_ms is obtained by differencing wall clocks on two
+  different hosts with no synchronisation guarantee, and should be read as
+  accurate to tens of milliseconds, not sub-millisecond.
+  Probe timestamps were mapped onto the orchestrator timebase as (probe wall
+  clock - orchestrator wall clock at trigger_issued). Deltas between two
+  probe events are exact because they share the probe's monotonic clock;
+  deltas between a probe event and any other source carry the unmeasured
+  host-to-host clock offset.
+
+report written to /out/arm-C/trial-004/report.json
+
+=== trial-005 (5 of 5): behavior=ignore trigger=delete grace=30s ===
+preflight [ ok ] probe-pod-ready                      1750ms
+preflight [ ok ] k8s-watches-delivering                  0ms
+preflight [ ok ] service-endpoint-stable              2000ms
+preflight [ ok ] flows-dialed                            5ms
+preflight [ ok ] tcp-flows-established                 500ms
+preflight [ ok ] udp-flows-replying                     50ms
+trigger: delete drainwatch/drainwatch-probe-65dc9ffcdb-zn892 at 2026-09-01T01:04:55.723240577Z
+all flows terminal at t+30520ms
+
+drainwatch 0.1.0-10-g173d102 (173d102)  trial trial-005
+==============================================================================
+ENVIRONMENT
+  kubernetes                  v1.34.0
+  nodes                       2
+    drainwatch-control-plane  containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+    drainwatch-worker         containerd://2.1.3 / v1.34.0 / Debian GNU/Linux 12 (bookworm)
+  kube-proxy mode             iptables
+  cni                         kindnet (identified by DaemonSet name; best effort)
+  host                        linux/amd64
+  started                     2026-09-01T00:59:18.516692126Z
+
+CONFIG
+  flows             10 tcp, 10 udp
+  drain behavior    ignore (DRAIN_MAX_SECONDS=25)
+  trigger           delete
+  grace period      30 s
+  settle / observe  10 s / 60 s
+  target            127.0.0.1 tcp:30071 udp:30072 (ns drainwatch)
+
+TIMELINE (t_ms relative to trigger_issued)
+  T_MS      SOURCE        EVENT                           DETAIL
+  -14435    orchestrator  workload_applied                deployment=drainwatch/drainwatch-probe image=drainwatch-probe:0.1.0 grace=30s
+  -14433    k8s           endpointslice_observed          drainwatch-probe-ln5c6 endpoints=0
+  -14421    k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-zn892 phase=Pending
+  -13667 ~  probe         listening                       tcp=:7001 udp=:7002 readyz=:7003
+  -13667 ~  probe         probe_started                   probe_version=0.1.0-10-g173d102 probe_commit=173d102 instance=drainwatch-probe-65dc9ffcdb-zn892 tcp=7001 udp=7002 readyz=7003 drain_max_seconds=25 exit_now_force_rst=true
+  -10024    orchestrator  preflight_passed                10 tcp flows and 10 udp flows established; pod and EndpointSlice watches delivering
+  -10024    orchestrator  probe_log_stream_opened         following container probe of pod drainwatch-probe-65dc9ffcdb-zn892
+  0         orchestrator  settle_complete                 held 10 tcp and 10 udp flows for 10s with no flow terminating
+  0         orchestrator  trigger_issued                  trigger=delete target=drainwatch/drainwatch-probe-65dc9ffcdb-zn892
+  10        orchestrator  trigger_api_returned            api call returned success
+  11        k8s           pod_deletion_timestamp_set      drainwatch-probe-65dc9ffcdb-zn892 deletionGracePeriodSeconds=30
+  21        k8s           endpointslice_ready_false       Pod/drainwatch-probe-65dc9ffcdb-zn892 in drainwatch-probe-ln5c6 (terminating=true) serving=true
+  27 ~      probe         sigterm_received                signal=terminated
+  28        k8s           pod_observed                    drainwatch-probe-65dc9ffcdb-5c98n phase=Pending
+  28 ~      probe         sigterm_ignored                 continuing to serve; readiness remains 200; waiting for SIGKILL at the grace-period boundary
+  30062     client        flow_terminal                   tcp-0001 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0002 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0003 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0004 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0005 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0006 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0007 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0008 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0009 severed: eof-without-drain-announcement
+  30062     client        flow_terminal                   tcp-0010 severed: eof-without-drain-announcement
+  30305     k8s           container_terminated            probe exitCode=137 reason=Error signal=0 finishedAt=2026-09-01T01:05:25Z
+  30305     k8s           pod_ready_false                 drainwatch-probe-65dc9ffcdb-zn892
+  30312     k8s           endpointslice_endpoint_removed  Pod/drainwatch-probe-65dc9ffcdb-zn892 removed from drainwatch-probe-ln5c6
+  30425     client        flow_terminal                   udp-0008 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0001 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0002 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0003 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0004 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0005 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0006 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0007 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0009 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30426     client        flow_terminal                   udp-0010 severed: answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  30520     orchestrator  all_flows_terminal              all 20 flows reached a terminal event; continuing to watch for 5s to catch trailing cluster events
+  30596     k8s           pod_object_deleted              drainwatch-probe-65dc9ffcdb-zn892 removed from the API
+  35586     orchestrator  observation_window_closed       window=60s; flows still alive at this instant are recorded as survived-observation-window
+  35587     orchestrator  probe_log_stream_ended          collected 842 probe events
+  (~ marks a cross-host approximate timestamp; see clock_note)
+
+FLOWS
+  ID        PROTO  OUTCOME  T_TERMINAL  LAST_SEQ  DETAIL
+  tcp-0001  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0002  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0003  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0004  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0005  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0006  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0007  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0008  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0009  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  tcp-0010  tcp    severed  30062 ms    80        eof-without-drain-announcement
+  udp-0001  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0002  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0003  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0004  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0005  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0006  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0007  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0008  udp    severed  30425 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0009  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+  udp-0010  udp    severed  30426 ms    80        answered by probe instance drainwatch-probe-65dc9ffcdb-5c98n, was drainwatch-probe-65dc9ffcdb-zn892
+
+SUMMARY
+  PROTO  TOTAL  DRAINED  SEVERED  READ_TIMEOUT  SURVIVED_WINDOW  NOT_MEASURED
+  tcp    10     0        10       0             0                0
+  udp    10     0        10       0             0                0
+
+  trigger -> sigterm               27 ms
+  sigterm -> endpoint ready:false  -6 ms
+  trigger -> endpoint removed      30312 ms
+  trigger -> container terminated  30305 ms
+  sigterm -> last flow terminal    30399 ms
+  NOTE: sigterm_to_ready_false_ms is negative (-6 ms): the SIGTERM timestamp comes from the probe's clock and the ready:false timestamp from the orchestrator's, so the true interval is smaller than the unmeasured skew between them. Read it as 'within clock skew of simultaneous', not as ready:false preceding SIGTERM.
+
+CLOCKS
+  t_ms is milliseconds relative to trigger_issued. Events from sources
+  'orchestrator' and 'client' are taken from a single monotonic clock in the
+  orchestrator process and are exact relative to the trigger. Events from
+  source 'k8s' are stamped with the orchestrator's monotonic clock at the
+  moment the watch event was received, so they include API-server write
+  latency and watch dispatch latency and are an upper bound on when the
+  change actually occurred. Events from source 'probe' are marked
+  approximate: their t_ms is obtained by differencing wall clocks on two
+  different hosts with no synchronisation guarantee, and should be read as
+  accurate to tens of milliseconds, not sub-millisecond.
+  Probe timestamps were mapped onto the orchestrator timebase as (probe wall
+  clock - orchestrator wall clock at trigger_issued). Deltas between two
+  probe events are exact because they share the probe's monotonic clock;
+  deltas between a probe event and any other source carry the unmeasured
+  host-to-host clock offset.
+
+report written to /out/arm-C/trial-005/report.json
+
+drainwatch 0.1.0-10-g173d102 (173d102)  5 trial(s)
+==============================================================================
+  TRIAL      BEHAVIOR  TRIGGER  TCP(d/s/rt/sw)  UDP(d/s/rt/sw)  TRIG->TERM  SIGTERM->READY_FALSE  SIGTERM->LAST_FLOW
+  trial-001  ignore    delete   0/10/0/0        0/10/0/0        33 ms       -10 ms                30342 ms
+  trial-002  ignore    delete   0/10/0/0        0/10/0/0        30 ms       -8 ms                 30403 ms
+  trial-003  ignore    delete   0/10/0/0        0/10/0/0        30 ms       -10 ms                30396 ms
+  trial-004  ignore    delete   0/10/0/0        0/10/0/0        28 ms       -7 ms                 30387 ms
+  trial-005  ignore    delete   0/10/0/0        0/10/0/0        27 ms       -6 ms                 30399 ms
+  legend: d=drained-clean-close s=severed rt=read-timeout sw=survived-observation-window
+summary written to /out/arm-C/summary.json
+
+dwrun: the orchestrator ran inside drainwatch-worker; its output paths above are container paths.
+dwrun: reports copied to results/2026-09-01-repeat5-kind-v1.34.0/arm-C/ on this machine.

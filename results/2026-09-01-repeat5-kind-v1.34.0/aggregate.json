@@ -1,0 +1,2043 @@
+[
+  {
+    "arm": "A",
+    "dir": "results/2026-09-01-repeat5-kind-v1.34.0/arm-A",
+    "trials": 5,
+    "drain_behavior": "exit-now",
+    "trigger": "delete",
+    "grace_period_seconds": 30,
+    "tcp_flows": 10,
+    "udp_flows": 10,
+    "environment": {
+      "kubernetes_version": "v1.34.0",
+      "node_count": 2,
+      "nodes": [
+        {
+          "name": "drainwatch-control-plane",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        },
+        {
+          "name": "drainwatch-worker",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        }
+      ],
+      "kube_proxy_mode": "iptables",
+      "cni": "kindnet (identified by DaemonSet name; best effort)",
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102",
+      "os": "linux",
+      "arch": "amd64",
+      "wall_clock_start": "2026-09-01T00:49:59.965957095Z",
+      "warnings": []
+    },
+    "build": {
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102"
+    },
+    "stats": [
+      {
+        "metric": "trigger_to_first_tcp_terminal_ms",
+        "description": "trigger -\u003e the first TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30,
+        "median": 41,
+        "max": 96,
+        "values": [
+          68,
+          96,
+          34,
+          41,
+          30
+        ]
+      },
+      {
+        "metric": "trigger_to_last_tcp_terminal_ms",
+        "description": "trigger -\u003e the last TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30,
+        "median": 45,
+        "max": 98,
+        "values": [
+          70,
+          98,
+          36,
+          45,
+          30
+        ]
+      },
+      {
+        "metric": "trigger_to_first_udp_terminal_ms",
+        "description": "trigger -\u003e the first UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 392,
+        "median": 2409,
+        "max": 2433,
+        "values": [
+          392,
+          2403,
+          2409,
+          2433,
+          2424
+        ]
+      },
+      {
+        "metric": "trigger_to_last_udp_terminal_ms",
+        "description": "trigger -\u003e the last UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 2395,
+        "median": 2410,
+        "max": 2434,
+        "values": [
+          2395,
+          2404,
+          2410,
+          2434,
+          2425
+        ]
+      },
+      {
+        "metric": "trigger_to_endpoint_removed_ms",
+        "description": "trigger -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 251,
+        "median": 293,
+        "max": 591,
+        "values": [
+          591,
+          293,
+          251,
+          307,
+          251
+        ]
+      },
+      {
+        "metric": "trigger_to_container_terminated_ms",
+        "description": "trigger -\u003e the container terminated",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 246,
+        "median": 285,
+        "max": 584,
+        "values": [
+          584,
+          285,
+          248,
+          303,
+          246
+        ]
+      },
+      {
+        "metric": "tcp_dead_before_endpoint_removed_ms",
+        "description": "how long the Service still advertised an endpoint after the last TCP flow had already died (negative means the endpoint went first)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 195,
+        "median": 221,
+        "max": 521,
+        "values": [
+          521,
+          195,
+          215,
+          262,
+          221
+        ]
+      },
+      {
+        "metric": "udp_first_terminal_minus_container_exit_ms",
+        "description": "when the first UDP flow stopped being served, relative to the container actually exiting (negative means the flow was already gone while the process was still running)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -192,
+        "median": 2130,
+        "max": 2178,
+        "values": [
+          -192,
+          2118,
+          2161,
+          2130,
+          2178
+        ]
+      },
+      {
+        "metric": "udp_last_terminal_minus_container_exit_ms",
+        "description": "when the last UDP flow stopped being served, relative to the container actually exiting",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 1811,
+        "median": 2131,
+        "max": 2179,
+        "values": [
+          1811,
+          2119,
+          2162,
+          2131,
+          2179
+        ]
+      },
+      {
+        "metric": "trigger_to_sigterm_ms",
+        "description": "trigger -\u003e SIGTERM delivered to the probe",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 29,
+        "median": 40,
+        "max": 96,
+        "values": [
+          68,
+          96,
+          34,
+          40,
+          29
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_ready_false_ms",
+        "description": "SIGTERM -\u003e the endpoint reported ready:false",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -73,
+        "median": -16,
+        "max": -3,
+        "values": [
+          -19,
+          -73,
+          -11,
+          -16,
+          -3
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_endpoint_removed_ms",
+        "description": "SIGTERM -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 197,
+        "median": 222,
+        "max": 523,
+        "values": [
+          523,
+          197,
+          217,
+          267,
+          222
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      }
+    ],
+    "repeats": [
+      {
+        "trial_id": "trial-001",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-A/trial-001/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "econnreset"
+        ],
+        "udp_mechanisms": [
+          "econnrefused (icmp port unreachable)",
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-002",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-A/trial-002/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "econnreset"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-003",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-A/trial-003/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "econnreset"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-004",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-A/trial-004/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "econnreset"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-005",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-A/trial-005/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "econnreset"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      }
+    ],
+    "container_exit_codes": {
+      "0": 5
+    },
+    "disagreements": null,
+    "has_disagreements": false,
+    "mechanism_variations": [
+      "trial-002 UDP severance route differs from trial-001: \"rehomed onto a different probe instance\" vs \"econnrefused (icmp port unreachable) + rehomed onto a different probe instance\"",
+      "trial-003 UDP severance route differs from trial-001: \"rehomed onto a different probe instance\" vs \"econnrefused (icmp port unreachable) + rehomed onto a different probe instance\"",
+      "trial-004 UDP severance route differs from trial-001: \"rehomed onto a different probe instance\" vs \"econnrefused (icmp port unreachable) + rehomed onto a different probe instance\"",
+      "trial-005 UDP severance route differs from trial-001: \"rehomed onto a different probe instance\" vs \"econnrefused (icmp port unreachable) + rehomed onto a different probe instance\""
+    ],
+    "has_mechanism_variation": true
+  },
+  {
+    "arm": "B",
+    "dir": "results/2026-09-01-repeat5-kind-v1.34.0/arm-B",
+    "trials": 5,
+    "drain_behavior": "drain",
+    "trigger": "delete",
+    "grace_period_seconds": 30,
+    "tcp_flows": 10,
+    "udp_flows": 10,
+    "environment": {
+      "kubernetes_version": "v1.34.0",
+      "node_count": 2,
+      "nodes": [
+        {
+          "name": "drainwatch-control-plane",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        },
+        {
+          "name": "drainwatch-worker",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        }
+      ],
+      "kube_proxy_mode": "iptables",
+      "cni": "kindnet (identified by DaemonSet name; best effort)",
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102",
+      "os": "linux",
+      "arch": "amd64",
+      "wall_clock_start": "2026-09-01T00:54:08.540736489Z",
+      "warnings": []
+    },
+    "build": {
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102"
+    },
+    "stats": [
+      {
+        "metric": "trigger_to_first_tcp_terminal_ms",
+        "description": "trigger -\u003e the first TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25027,
+        "median": 25041,
+        "max": 25110,
+        "values": [
+          25110,
+          25041,
+          25069,
+          25035,
+          25027
+        ]
+      },
+      {
+        "metric": "trigger_to_last_tcp_terminal_ms",
+        "description": "trigger -\u003e the last TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25029,
+        "median": 25043,
+        "max": 25113,
+        "values": [
+          25113,
+          25043,
+          25071,
+          25037,
+          25029
+        ]
+      },
+      {
+        "metric": "trigger_to_first_udp_terminal_ms",
+        "description": "trigger -\u003e the first UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 2411,
+        "median": 2417,
+        "max": 2433,
+        "values": [
+          2415,
+          2428,
+          2411,
+          2417,
+          2433
+        ]
+      },
+      {
+        "metric": "trigger_to_last_udp_terminal_ms",
+        "description": "trigger -\u003e the last UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 2412,
+        "median": 2421,
+        "max": 2434,
+        "values": [
+          2421,
+          2429,
+          2412,
+          2417,
+          2434
+        ]
+      },
+      {
+        "metric": "trigger_to_endpoint_removed_ms",
+        "description": "trigger -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25243,
+        "median": 25296,
+        "max": 25466,
+        "values": [
+          25466,
+          25296,
+          25333,
+          25243,
+          25246
+        ]
+      },
+      {
+        "metric": "trigger_to_container_terminated_ms",
+        "description": "trigger -\u003e the container terminated",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25237,
+        "median": 25289,
+        "max": 25460,
+        "values": [
+          25460,
+          25289,
+          25325,
+          25237,
+          25239
+        ]
+      },
+      {
+        "metric": "tcp_dead_before_endpoint_removed_ms",
+        "description": "how long the Service still advertised an endpoint after the last TCP flow had already died (negative means the endpoint went first)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 206,
+        "median": 253,
+        "max": 353,
+        "values": [
+          353,
+          253,
+          262,
+          206,
+          217
+        ]
+      },
+      {
+        "metric": "udp_first_terminal_minus_container_exit_ms",
+        "description": "when the first UDP flow stopped being served, relative to the container actually exiting (negative means the flow was already gone while the process was still running)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -23045,
+        "median": -22861,
+        "max": -22806,
+        "values": [
+          -23045,
+          -22861,
+          -22914,
+          -22820,
+          -22806
+        ]
+      },
+      {
+        "metric": "udp_last_terminal_minus_container_exit_ms",
+        "description": "when the last UDP flow stopped being served, relative to the container actually exiting",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -23039,
+        "median": -22860,
+        "max": -22805,
+        "values": [
+          -23039,
+          -22860,
+          -22913,
+          -22820,
+          -22805
+        ]
+      },
+      {
+        "metric": "trigger_to_sigterm_ms",
+        "description": "trigger -\u003e SIGTERM delivered to the probe",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 26,
+        "median": 40,
+        "max": 108,
+        "values": [
+          108,
+          40,
+          68,
+          33,
+          26
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_ready_false_ms",
+        "description": "SIGTERM -\u003e the endpoint reported ready:false",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -76,
+        "median": -18,
+        "max": -4,
+        "values": [
+          -76,
+          -18,
+          -42,
+          -4,
+          -5
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_endpoint_removed_ms",
+        "description": "SIGTERM -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25210,
+        "median": 25256,
+        "max": 25358,
+        "values": [
+          25358,
+          25256,
+          25265,
+          25210,
+          25220
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      }
+    ],
+    "repeats": [
+      {
+        "trial_id": "trial-001",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-B/trial-001/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-002",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-B/trial-002/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-003",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-B/trial-003/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-004",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-B/trial-004/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-005",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-B/trial-005/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      }
+    ],
+    "container_exit_codes": {
+      "0": 5
+    },
+    "disagreements": null,
+    "has_disagreements": false,
+    "mechanism_variations": null,
+    "has_mechanism_variation": false
+  },
+  {
+    "arm": "C",
+    "dir": "results/2026-09-01-repeat5-kind-v1.34.0/arm-C",
+    "trials": 5,
+    "drain_behavior": "ignore",
+    "trigger": "delete",
+    "grace_period_seconds": 30,
+    "tcp_flows": 10,
+    "udp_flows": 10,
+    "environment": {
+      "kubernetes_version": "v1.34.0",
+      "node_count": 2,
+      "nodes": [
+        {
+          "name": "drainwatch-control-plane",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        },
+        {
+          "name": "drainwatch-worker",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        }
+      ],
+      "kube_proxy_mode": "iptables",
+      "cni": "kindnet (identified by DaemonSet name; best effort)",
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102",
+      "os": "linux",
+      "arch": "amd64",
+      "wall_clock_start": "2026-09-01T00:59:18.516692126Z",
+      "warnings": []
+    },
+    "build": {
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102"
+    },
+    "stats": [
+      {
+        "metric": "trigger_to_first_tcp_terminal_ms",
+        "description": "trigger -\u003e the first TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30050,
+        "median": 30055,
+        "max": 30062,
+        "values": [
+          30055,
+          30057,
+          30052,
+          30050,
+          30062
+        ]
+      },
+      {
+        "metric": "trigger_to_last_tcp_terminal_ms",
+        "description": "trigger -\u003e the last TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30050,
+        "median": 30056,
+        "max": 30062,
+        "values": [
+          30056,
+          30057,
+          30052,
+          30050,
+          30062
+        ]
+      },
+      {
+        "metric": "trigger_to_first_udp_terminal_ms",
+        "description": "trigger -\u003e the first UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30374,
+        "median": 30425,
+        "max": 30433,
+        "values": [
+          30374,
+          30433,
+          30426,
+          30415,
+          30425
+        ]
+      },
+      {
+        "metric": "trigger_to_last_udp_terminal_ms",
+        "description": "trigger -\u003e the last UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30375,
+        "median": 30426,
+        "max": 30433,
+        "values": [
+          30375,
+          30433,
+          30426,
+          30415,
+          30426
+        ]
+      },
+      {
+        "metric": "trigger_to_endpoint_removed_ms",
+        "description": "trigger -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30244,
+        "median": 30259,
+        "max": 30312,
+        "values": [
+          30262,
+          30244,
+          30248,
+          30259,
+          30312
+        ]
+      },
+      {
+        "metric": "trigger_to_container_terminated_ms",
+        "description": "trigger -\u003e the container terminated",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30240,
+        "median": 30255,
+        "max": 30305,
+        "values": [
+          30257,
+          30240,
+          30244,
+          30255,
+          30305
+        ]
+      },
+      {
+        "metric": "tcp_dead_before_endpoint_removed_ms",
+        "description": "how long the Service still advertised an endpoint after the last TCP flow had already died (negative means the endpoint went first)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 187,
+        "median": 206,
+        "max": 250,
+        "values": [
+          206,
+          187,
+          196,
+          209,
+          250
+        ]
+      },
+      {
+        "metric": "udp_first_terminal_minus_container_exit_ms",
+        "description": "when the first UDP flow stopped being served, relative to the container actually exiting (negative means the flow was already gone while the process was still running)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 117,
+        "median": 160,
+        "max": 193,
+        "values": [
+          117,
+          193,
+          182,
+          160,
+          120
+        ]
+      },
+      {
+        "metric": "udp_last_terminal_minus_container_exit_ms",
+        "description": "when the last UDP flow stopped being served, relative to the container actually exiting",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 118,
+        "median": 160,
+        "max": 193,
+        "values": [
+          118,
+          193,
+          182,
+          160,
+          121
+        ]
+      },
+      {
+        "metric": "trigger_to_sigterm_ms",
+        "description": "trigger -\u003e SIGTERM delivered to the probe",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 27,
+        "median": 30,
+        "max": 33,
+        "values": [
+          33,
+          30,
+          30,
+          28,
+          27
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_ready_false_ms",
+        "description": "SIGTERM -\u003e the endpoint reported ready:false",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -10,
+        "median": -8,
+        "max": -6,
+        "values": [
+          -10,
+          -8,
+          -10,
+          -7,
+          -6
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_endpoint_removed_ms",
+        "description": "SIGTERM -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 30214,
+        "median": 30229,
+        "max": 30285,
+        "values": [
+          30229,
+          30214,
+          30218,
+          30231,
+          30285
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      }
+    ],
+    "repeats": [
+      {
+        "trial_id": "trial-001",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-C/trial-001/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "eof-without-drain-announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 137
+      },
+      {
+        "trial_id": "trial-002",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-C/trial-002/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "eof-without-drain-announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 137
+      },
+      {
+        "trial_id": "trial-003",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-C/trial-003/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "eof-without-drain-announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 137
+      },
+      {
+        "trial_id": "trial-004",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-C/trial-004/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "eof-without-drain-announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 137
+      },
+      {
+        "trial_id": "trial-005",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-C/trial-005/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "eof-without-drain-announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 137
+      }
+    ],
+    "container_exit_codes": {
+      "137": 5
+    },
+    "disagreements": null,
+    "has_disagreements": false,
+    "mechanism_variations": null,
+    "has_mechanism_variation": false
+  },
+  {
+    "arm": "D",
+    "dir": "results/2026-09-01-repeat5-kind-v1.34.0/arm-D",
+    "trials": 5,
+    "drain_behavior": "drain",
+    "trigger": "evict",
+    "grace_period_seconds": 30,
+    "tcp_flows": 10,
+    "udp_flows": 10,
+    "environment": {
+      "kubernetes_version": "v1.34.0",
+      "node_count": 2,
+      "nodes": [
+        {
+          "name": "drainwatch-control-plane",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        },
+        {
+          "name": "drainwatch-worker",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        }
+      ],
+      "kube_proxy_mode": "iptables",
+      "cni": "kindnet (identified by DaemonSet name; best effort)",
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102",
+      "os": "linux",
+      "arch": "amd64",
+      "wall_clock_start": "2026-09-01T01:06:30.952376531Z",
+      "warnings": []
+    },
+    "build": {
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102"
+    },
+    "stats": [
+      {
+        "metric": "trigger_to_first_tcp_terminal_ms",
+        "description": "trigger -\u003e the first TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25031,
+        "median": 25035,
+        "max": 25061,
+        "values": [
+          25061,
+          25035,
+          25031,
+          25034,
+          25051
+        ]
+      },
+      {
+        "metric": "trigger_to_last_tcp_terminal_ms",
+        "description": "trigger -\u003e the last TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25034,
+        "median": 25037,
+        "max": 25065,
+        "values": [
+          25065,
+          25037,
+          25034,
+          25037,
+          25053
+        ]
+      },
+      {
+        "metric": "trigger_to_first_udp_terminal_ms",
+        "description": "trigger -\u003e the first UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 2419,
+        "median": 2420,
+        "max": 2436,
+        "values": [
+          2420,
+          2428,
+          2419,
+          2420,
+          2436
+        ]
+      },
+      {
+        "metric": "trigger_to_last_udp_terminal_ms",
+        "description": "trigger -\u003e the last UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 2420,
+        "median": 2422,
+        "max": 2437,
+        "values": [
+          2421,
+          2429,
+          2420,
+          2422,
+          2437
+        ]
+      },
+      {
+        "metric": "trigger_to_endpoint_removed_ms",
+        "description": "trigger -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25223,
+        "median": 25243,
+        "max": 25780,
+        "values": [
+          25780,
+          25243,
+          25260,
+          25223,
+          25230
+        ]
+      },
+      {
+        "metric": "trigger_to_container_terminated_ms",
+        "description": "trigger -\u003e the container terminated",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25216,
+        "median": 25239,
+        "max": 25773,
+        "values": [
+          25773,
+          25239,
+          25254,
+          25216,
+          25226
+        ]
+      },
+      {
+        "metric": "tcp_dead_before_endpoint_removed_ms",
+        "description": "how long the Service still advertised an endpoint after the last TCP flow had already died (negative means the endpoint went first)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 177,
+        "median": 206,
+        "max": 715,
+        "values": [
+          715,
+          206,
+          226,
+          186,
+          177
+        ]
+      },
+      {
+        "metric": "udp_first_terminal_minus_container_exit_ms",
+        "description": "when the first UDP flow stopped being served, relative to the container actually exiting (negative means the flow was already gone while the process was still running)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -23353,
+        "median": -22811,
+        "max": -22790,
+        "values": [
+          -23353,
+          -22811,
+          -22835,
+          -22796,
+          -22790
+        ]
+      },
+      {
+        "metric": "udp_last_terminal_minus_container_exit_ms",
+        "description": "when the last UDP flow stopped being served, relative to the container actually exiting",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -23352,
+        "median": -22810,
+        "max": -22789,
+        "values": [
+          -23352,
+          -22810,
+          -22834,
+          -22794,
+          -22789
+        ]
+      },
+      {
+        "metric": "trigger_to_sigterm_ms",
+        "description": "trigger -\u003e SIGTERM delivered to the probe",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 29,
+        "median": 32,
+        "max": 59,
+        "values": [
+          59,
+          32,
+          29,
+          32,
+          50
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_ready_false_ms",
+        "description": "SIGTERM -\u003e the endpoint reported ready:false",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -28,
+        "median": -6,
+        "max": -4,
+        "values": [
+          -28,
+          -6,
+          -4,
+          -9,
+          -5
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_endpoint_removed_ms",
+        "description": "SIGTERM -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25180,
+        "median": 25211,
+        "max": 25721,
+        "values": [
+          25721,
+          25211,
+          25231,
+          25191,
+          25180
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      }
+    ],
+    "repeats": [
+      {
+        "trial_id": "trial-001",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-D/trial-001/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-002",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-D/trial-002/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-003",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-D/trial-003/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-004",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-D/trial-004/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-005",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-D/trial-005/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "rehomed onto a different probe instance"
+        ],
+        "container_exit_code": 0
+      }
+    ],
+    "container_exit_codes": {
+      "0": 5
+    },
+    "disagreements": null,
+    "has_disagreements": false,
+    "mechanism_variations": null,
+    "has_mechanism_variation": false
+  },
+  {
+    "arm": "E",
+    "dir": "results/2026-09-01-repeat5-kind-v1.34.0/arm-E",
+    "trials": 5,
+    "drain_behavior": "drain",
+    "trigger": "scale",
+    "grace_period_seconds": 30,
+    "tcp_flows": 10,
+    "udp_flows": 10,
+    "environment": {
+      "kubernetes_version": "v1.34.0",
+      "node_count": 2,
+      "nodes": [
+        {
+          "name": "drainwatch-control-plane",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        },
+        {
+          "name": "drainwatch-worker",
+          "container_runtime": "containerd://2.1.3",
+          "kubelet_version": "v1.34.0",
+          "os_image": "Debian GNU/Linux 12 (bookworm)",
+          "architecture": "amd64"
+        }
+      ],
+      "kube_proxy_mode": "iptables",
+      "cni": "kindnet (identified by DaemonSet name; best effort)",
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102",
+      "os": "linux",
+      "arch": "amd64",
+      "wall_clock_start": "2026-09-01T01:11:08.668269029Z",
+      "warnings": []
+    },
+    "build": {
+      "drainwatch_version": "0.1.0-10-g173d102",
+      "git_commit": "173d102"
+    },
+    "stats": [
+      {
+        "metric": "trigger_to_first_tcp_terminal_ms",
+        "description": "trigger -\u003e the first TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25040,
+        "median": 25043,
+        "max": 25048,
+        "values": [
+          25042,
+          25048,
+          25043,
+          25040,
+          25046
+        ]
+      },
+      {
+        "metric": "trigger_to_last_tcp_terminal_ms",
+        "description": "trigger -\u003e the last TCP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25042,
+        "median": 25046,
+        "max": 25051,
+        "values": [
+          25043,
+          25051,
+          25046,
+          25042,
+          25050
+        ]
+      },
+      {
+        "metric": "trigger_to_first_udp_terminal_ms",
+        "description": "trigger -\u003e the first UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25404,
+        "median": 25426,
+        "max": 25431,
+        "values": [
+          25420,
+          25404,
+          25431,
+          25426,
+          25429
+        ]
+      },
+      {
+        "metric": "trigger_to_last_udp_terminal_ms",
+        "description": "trigger -\u003e the last UDP flow to end",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25405,
+        "median": 25427,
+        "max": 25431,
+        "values": [
+          25421,
+          25405,
+          25431,
+          25427,
+          25430
+        ]
+      },
+      {
+        "metric": "trigger_to_endpoint_removed_ms",
+        "description": "trigger -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25220,
+        "median": 25256,
+        "max": 25356,
+        "values": [
+          25301,
+          25220,
+          25356,
+          25253,
+          25256
+        ]
+      },
+      {
+        "metric": "trigger_to_container_terminated_ms",
+        "description": "trigger -\u003e the container terminated",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25215,
+        "median": 25252,
+        "max": 25320,
+        "values": [
+          25277,
+          25215,
+          25320,
+          25249,
+          25252
+        ]
+      },
+      {
+        "metric": "tcp_dead_before_endpoint_removed_ms",
+        "description": "how long the Service still advertised an endpoint after the last TCP flow had already died (negative means the endpoint went first)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 169,
+        "median": 211,
+        "max": 310,
+        "values": [
+          258,
+          169,
+          310,
+          211,
+          206
+        ]
+      },
+      {
+        "metric": "udp_first_terminal_minus_container_exit_ms",
+        "description": "when the first UDP flow stopped being served, relative to the container actually exiting (negative means the flow was already gone while the process was still running)",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 111,
+        "median": 177,
+        "max": 189,
+        "values": [
+          143,
+          189,
+          111,
+          177,
+          177
+        ]
+      },
+      {
+        "metric": "udp_last_terminal_minus_container_exit_ms",
+        "description": "when the last UDP flow stopped being served, relative to the container actually exiting",
+        "clock_basis": "same-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 111,
+        "median": 178,
+        "max": 190,
+        "values": [
+          144,
+          190,
+          111,
+          178,
+          178
+        ]
+      },
+      {
+        "metric": "trigger_to_sigterm_ms",
+        "description": "trigger -\u003e SIGTERM delivered to the probe",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 39,
+        "median": 42,
+        "max": 47,
+        "values": [
+          40,
+          47,
+          42,
+          39,
+          44
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_ready_false_ms",
+        "description": "SIGTERM -\u003e the endpoint reported ready:false",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": -12,
+        "median": -10,
+        "max": -7,
+        "values": [
+          -9,
+          -11,
+          -10,
+          -7,
+          -12
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      },
+      {
+        "metric": "sigterm_to_endpoint_removed_ms",
+        "description": "SIGTERM -\u003e the endpoint left the EndpointSlice",
+        "clock_basis": "cross-clock",
+        "unit": "ms",
+        "observed_repeats": 5,
+        "not_measured_repeats": 0,
+        "min": 25173,
+        "median": 25214,
+        "max": 25314,
+        "values": [
+          25261,
+          25173,
+          25314,
+          25214,
+          25212
+        ],
+        "caveat": "one endpoint is the probe's wall clock and the other the orchestrator's, with no synchronisation between them; read these as accurate to tens of milliseconds, and read a small negative value as 'within skew of simultaneous' rather than as a reversal of order"
+      }
+    ],
+    "repeats": [
+      {
+        "trial_id": "trial-001",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-E/trial-001/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "econnrefused (icmp port unreachable)"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-002",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-E/trial-002/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "econnrefused (icmp port unreachable)"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-003",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-E/trial-003/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "econnrefused (icmp port unreachable)"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-004",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-E/trial-004/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "econnrefused (icmp port unreachable)"
+        ],
+        "container_exit_code": 0
+      },
+      {
+        "trial_id": "trial-005",
+        "report_path": "results/2026-09-01-repeat5-kind-v1.34.0/arm-E/trial-005/report.json",
+        "tcp": {
+          "total": 10,
+          "drained": 10,
+          "severed": 0,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "udp": {
+          "total": 10,
+          "drained": 0,
+          "severed": 10,
+          "read_timeout": 0,
+          "survived_window": 0,
+          "not_measured": 0
+        },
+        "tcp_mechanisms": [
+          "fin after drain announcement"
+        ],
+        "udp_mechanisms": [
+          "econnrefused (icmp port unreachable)"
+        ],
+        "container_exit_code": 0
+      }
+    ],
+    "container_exit_codes": {
+      "0": 5
+    },
+    "disagreements": null,
+    "has_disagreements": false,
+    "mechanism_variations": null,
+    "has_mechanism_variation": false
+  }
+]

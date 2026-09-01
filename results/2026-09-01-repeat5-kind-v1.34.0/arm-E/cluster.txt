@@ -1,0 +1,10 @@
+arm: E
+drain_behavior: drain
+trigger: scale
+repeats: 5
+cluster_name: drainwatch
+cluster_created_utc: 2026-09-01T01:10:16Z
+cluster_create_seconds: 45
+kind_version: kind v0.30.0 go1.24.6 darwin/amd64
+drainwatch_version: 0.1.0-10-g173d102
+drainwatch_commit: 173d102

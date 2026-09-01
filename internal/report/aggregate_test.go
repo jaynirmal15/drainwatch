@@ -580,3 +580,43 @@ func TestRenderMatrixFlagsMixedArms(t *testing.T) {
 		t.Error("the matrix must announce disagreeing arms")
 	}
 }
+
+// TestUDPRelativeToContainerExitIsPerRepeat guards against the difference-of-
+// medians mistake: the statistic must be the median of each repeat's own
+// difference, not the difference between two medians.
+func TestUDPRelativeToContainerExitIsPerRepeat(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "arm-U")
+
+	// Three repeats whose UDP terminal and container exit both vary, arranged
+	// so that the difference of the medians (2400-1000 = 1400) differs from the
+	// median of the differences (1000).
+	udp := []int64{2000, 2400, 3000}
+	exit := []int64{1000, 2000, 1500}
+	// per-repeat differences: 1000, 400, 1500 -> median 1000
+	var fixtures []trialFixture
+	for i := range udp {
+		f := baseFixture()
+		f.udpTerminal = Ptr(udp[i])
+		f.containerMs = Ptr(exit[i])
+		fixtures = append(fixtures, f)
+	}
+	writeArm(t, dir, fixtures)
+
+	a, err := LoadArm(dir)
+	if err != nil {
+		t.Fatalf("LoadArm: %v", err)
+	}
+	s := a.Stat("udp_last_terminal_minus_container_exit_ms")
+	if s == nil {
+		t.Fatal("missing udp_last_terminal_minus_container_exit_ms")
+	}
+	if *s.Median != 1000 {
+		t.Errorf("median = %d, want 1000 (the median of the per-repeat differences, not 1400 which is the difference of the medians)", *s.Median)
+	}
+	if *s.Min != 400 || *s.Max != 1500 {
+		t.Errorf("min/max = %d/%d, want 400/1500", *s.Min, *s.Max)
+	}
+	if s.ClockBasis != ClockSameProcess {
+		t.Errorf("both endpoints are orchestrator-clock, want %q", ClockSameProcess)
+	}
+}
