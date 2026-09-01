@@ -1,0 +1,1 @@
+arm E aborted with exit code 1; see run.log. The arm must be rerun from repeat 1 after the defect is fixed.

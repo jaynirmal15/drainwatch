@@ -118,6 +118,7 @@ func cmdRun(args []string) int {
 	fs.IntVar(&o.SettleSeconds, "settle-seconds", 10, "how long to hold flows in steady state before triggering")
 	fs.IntVar(&o.ObserveTimeoutSeconds, "observe-timeout", 0, "observation window in seconds; 0 means auto (grace-period + 30)")
 	fs.IntVar(&o.ReadyTimeoutSeconds, "ready-timeout", 120, "how long to wait for the probe pod to become Ready")
+	fs.IntVar(&o.EndpointStableMs, "endpoint-stable-ms", 2000, "how long this trial's endpoint must be continuously ready before flows are dialed, so kube-proxy has programmed it")
 	fs.IntVar(&o.PostTerminalGraceSecond, "post-terminal-grace", 5, "how long to keep watching after the last flow ends, to catch trailing cluster events")
 	fs.DurationVar(&o.FlowTimeout, "flow-timeout", flowgen.DefaultFlowTimeout, "TCP read timeout before a flow is recorded as read-timeout")
 	fs.DurationVar(&o.Interval, "interval", flowgen.DefaultInterval, "heartbeat and datagram interval")

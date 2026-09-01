@@ -274,14 +274,16 @@ func runPreflight(ctx context.Context, out io.Writer, watcher *Watcher, gen *flo
 			},
 		},
 		{
-			Name:      "service-endpoint-ready",
-			Invariant: "the probe Service has at least one ready endpoint, so that an endpoint leaving rotation is observable",
+			Name:      "service-endpoint-stable",
+			Invariant: "the endpoint for THIS trial's probe pod has been continuously ready long enough for kube-proxy to have programmed it",
 			Hint:      "kubectl -n " + o.Namespace + " get endpointslices -l " + ServiceNameLabel + "=drainwatch-probe -o yaml",
 			Fn: func(ctx context.Context) error {
-				return preflight.WaitFor(ctx, 60*time.Second, 250*time.Millisecond, "a ready endpoint in the probe EndpointSlice",
+				stable := time.Duration(o.EndpointStableMs) * time.Millisecond
+				return preflight.WaitFor(ctx, 60*time.Second, 250*time.Millisecond,
+					fmt.Sprintf("the endpoint for the probe pod ready continuously for %s", stable),
 					func(context.Context) (bool, string, error) {
-						n := watcher.ReadyEndpointCount()
-						return n > 0, fmt.Sprintf("ready endpoints observed: %d", n), nil
+						ok, why := watcher.ReadyEndpointStableFor(watcher.PodName(), stable)
+						return ok, why, nil
 					})
 			},
 		},

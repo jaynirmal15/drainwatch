@@ -1,0 +1,26 @@
+Superseded session, build 0.1.0-9-g4441e81. NOT part of the recorded matrix.
+
+Arms A-D completed here (20 trials). Arm E aborted at repeat 3 when six of ten
+TCP flows died during the steady-state hold, before the trigger was issued. The
+harness refused to measure through it, which was correct.
+
+The cause was a defect in drainwatch, not in the cluster:
+
+  The service-endpoint-ready preflight check counted ANY ready endpoint, and
+  endpoints were never removed from the readiness map when they left the
+  EndpointSlice. The previous trial's endpoint could therefore satisfy this
+  trial's check - which is why it passed in 0 ms - letting flows be dialed
+  before this trial's pod endpoint had been programmed into kube-proxy on the
+  node. When kube-proxy converged it flushed conntrack for the NodePort and
+  tore down the subset of flows established in that window.
+
+Arm E is the arm where this was most likely to bite, because it is the only one
+whose previous trial ends by scaling to zero, giving a 1 -> 0 -> 1 endpoint
+transition between trials.
+
+The check is now scoped to this trial's pod and requires the endpoint to have
+been continuously ready for --endpoint-stable-ms (default 2000) before flows are
+dialed. Because that changes the measuring instrument, the whole matrix was
+rerun from a single frozen build rather than stitching a fixed arm E onto four
+arms recorded with the defect present. These 20 trials are kept for the record
+and are used for no number anywhere.

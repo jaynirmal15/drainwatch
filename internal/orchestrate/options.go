@@ -49,6 +49,7 @@ type Options struct {
 	UDPPort    int
 
 	SettleSeconds           int
+	EndpointStableMs        int
 	ObserveTimeoutSeconds   int
 	ReadyTimeoutSeconds     int
 	PostTerminalGraceSecond int
@@ -122,6 +123,14 @@ func (o *Options) Normalize() error {
 	}
 	if o.PostTerminalGraceSecond <= 0 {
 		o.PostTerminalGraceSecond = 5
+	}
+	if o.EndpointStableMs <= 0 {
+		// Long enough for kube-proxy to program a freshly published endpoint on
+		// the node. Flows dialed inside that window can be torn down when
+		// kube-proxy converges and flushes conntrack, which aborts the trial as
+		// an unhealthy harness when it is really endpoint churn from the
+		// previous trial still settling.
+		o.EndpointStableMs = 2000
 	}
 	if o.Interval <= 0 {
 		o.Interval = flowgen.DefaultInterval

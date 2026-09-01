@@ -54,7 +54,14 @@ type Watcher struct {
 	// slice name then endpoint identity.
 	knownEndpoints map[string]map[string]bool
 	// readyEndpoints tracks the last observed readiness per endpoint identity.
+	// Entries are deleted when an endpoint leaves the slice: a departed
+	// endpoint is not a ready one, and leaving it behind would let a previous
+	// trial's endpoint satisfy this trial's preflight.
 	readyEndpoints map[string]bool
+	// readySince records when each endpoint most recently became ready, so
+	// preflight can require an endpoint to have been ready for a minimum
+	// duration rather than accepting the instant the watch first reports it.
+	readySince map[string]time.Time
 
 	stop chan struct{}
 	once sync.Once
@@ -66,6 +73,7 @@ func NewWatcher() *Watcher {
 		terminatedContainers: map[string]bool{},
 		knownEndpoints:       map[string]map[string]bool{},
 		readyEndpoints:       map[string]bool{},
+		readySince:           map[string]time.Time{},
 		stop:                 make(chan struct{}),
 	}
 }
@@ -191,6 +199,50 @@ func (w *Watcher) ReadyEndpointCount() int {
 		}
 	}
 	return n
+}
+
+// EndpointIdentityForPod is how the EndpointSlice controller names an endpoint
+// backed by a pod.
+func EndpointIdentityForPod(podName string) string { return "Pod/" + podName }
+
+// ReadyEndpointStableFor reports whether the endpoint belonging to podName has
+// been continuously ready for at least minStable.
+//
+// Both halves matter, and both were learned the hard way. Scoping to the pod
+// stops a previous trial's endpoint - which can still be listed in the slice
+// when this trial's watch performs its initial LIST - from satisfying the
+// check. Requiring a minimum duration stops flows being dialed in the window
+// between the API server publishing the endpoint and kube-proxy programming it
+// on the node; flows established in that window can be torn down when
+// kube-proxy converges and flushes conntrack, which looks like an unhealthy
+// harness rather than the endpoint churn it really is.
+func (w *Watcher) ReadyEndpointStableFor(podName string, minStable time.Duration) (bool, string) {
+	if podName == "" {
+		return false, "the probe pod name is not known yet"
+	}
+	id := EndpointIdentityForPod(podName)
+
+	w.mu.Lock()
+	ready := w.readyEndpoints[id]
+	since, hasSince := w.readySince[id]
+	others := 0
+	for other, r := range w.readyEndpoints {
+		if r && other != id {
+			others++
+		}
+	}
+	w.mu.Unlock()
+
+	if !ready || !hasSince {
+		if others > 0 {
+			return false, fmt.Sprintf("no ready endpoint for %s yet (%d ready endpoint(s) belong to other pods and do not count)", podName, others)
+		}
+		return false, fmt.Sprintf("no ready endpoint for %s yet", podName)
+	}
+	if stable := time.Since(since); stable < minStable {
+		return false, fmt.Sprintf("endpoint for %s has been ready for %s, needs %s", podName, stable.Round(time.Millisecond), minStable)
+	}
+	return true, ""
 }
 
 // PodName returns the name of the probe pod as observed by the watch, or "".
@@ -327,6 +379,10 @@ func (w *Watcher) onSliceDelete(obj any) {
 	delete(w.knownEndpoints, slice.Name)
 	w.mu.Unlock()
 	for id := range previous {
+		w.mu.Lock()
+		delete(w.readyEndpoints, id)
+		delete(w.readySince, id)
+		w.mu.Unlock()
 		w.record(report.EventEndpointSliceEndpointGone, fmt.Sprintf("%s (slice %s deleted)", id, slice.Name))
 	}
 }
@@ -364,6 +420,12 @@ func (w *Watcher) diffSlice(oldSlice, newSlice *discoveryv1.EndpointSlice) {
 		w.mu.Lock()
 		prevReady, known := w.readyEndpoints[id]
 		w.readyEndpoints[id] = ready
+		switch {
+		case ready && (!known || !prevReady):
+			w.readySince[id] = time.Now()
+		case !ready:
+			delete(w.readySince, id)
+		}
 		w.mu.Unlock()
 
 		if known && prevReady && !ready {
@@ -387,9 +449,14 @@ func (w *Watcher) diffSlice(oldSlice, newSlice *discoveryv1.EndpointSlice) {
 		return
 	}
 	for id := range previous {
-		if !current[id] {
-			w.record(report.EventEndpointSliceEndpointGone, fmt.Sprintf("%s removed from %s", id, name))
+		if current[id] {
+			continue
 		}
+		w.mu.Lock()
+		delete(w.readyEndpoints, id)
+		delete(w.readySince, id)
+		w.mu.Unlock()
+		w.record(report.EventEndpointSliceEndpointGone, fmt.Sprintf("%s removed from %s", id, name))
 	}
 }
 
