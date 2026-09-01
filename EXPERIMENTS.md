@@ -29,9 +29,9 @@ history you can clone today. See the History note below for why they differ.
 
 | | as recorded in reports | in current history | what it is |
 | --- | --- | --- | --- |
-| `v0.1.0` tag | `0e59101` | `cb464f8` | the released harness — an annotated tag, and what `git clone` plus `git checkout v0.1.0` gives you |
-| n=1 run | `d36d40d` | `da46d38` | the commit the three-arm run below was recorded from, two commits before the tag |
-| n=5 matrix | `173d102` | `94f9b94` | the commit all 25 matrix trials were recorded from, ten commits after the tag |
+| `v0.1.0` tag | `0e59101` | `aa662ce` | the released harness — an annotated tag, and what `git clone` plus `git checkout v0.1.0` gives you |
+| n=1 run | `d36d40d` | `84c3c87` | the commit the three-arm run below was recorded from, two commits before the tag |
+| n=5 matrix | `173d102` | `2224f57` | the commit all 25 matrix trials were recorded from, ten commits after the tag |
 
 The tag sits between the two datasets because the work did: the n=1 run exposed defects
 that were fixed before tagging, and the matrix needed an aggregator and an endpoint-
@@ -225,7 +225,7 @@ console output in `reproduce.log`.
 | | |
 | --- | --- |
 | Date | 2026-08-31 (wall clock start 01:03:21Z) |
-| drainwatch version / commit | 0.1.0 / `d36d40d` (pre-rewrite hash, as embedded in the reports; `da46d38` today) |
+| drainwatch version / commit | 0.1.0 / `d36d40d` (pre-rewrite hash, as embedded in the reports; `84c3c87` today) |
 | Kubernetes version | v1.34.0 (kind, 2 nodes) |
 | Nodes / container runtime | drainwatch-control-plane, drainwatch-worker — containerd://2.1.3, kubelet v1.34.0, Debian 12 (bookworm), amd64 |
 | kube-proxy mode | `iptables` (read from the ConfigMap) |
@@ -303,7 +303,7 @@ client kept receiving acks for the full 60 seconds and had no way to know they w
 from a different pod. That reads as "nothing happened to these flows", which is the
 opposite of the truth. The probe now identifies its process on every heartbeat and ack, and
 a flow answered by a new instance is classified `severed`. Two other defects surfaced the
-same way and are recorded in commit `da46d38` (cited in the reports as `d36d40d`).
+same way and are recorded in commit `84c3c87` (cited in the reports as `d36d40d`).
 
 ---
 
@@ -319,7 +319,7 @@ one directory per arm, five `trial-NNN/report.json` each, plus `aggregate.json` 
 | | |
 | --- | --- |
 | Date | 2026-09-01, 00:45Z to 01:15Z |
-| drainwatch version / commit | `0.1.0-10-g173d102` / `173d102` — one frozen build for all 25 trials (pre-rewrite hash, as embedded in the reports; `94f9b94` today) |
+| drainwatch version / commit | `0.1.0-10-g173d102` / `173d102` — one frozen build for all 25 trials (pre-rewrite hash, as embedded in the reports; `2224f57` today) |
 | Kubernetes version | v1.34.0 (kind v0.30.0, 2 nodes) — identical across all 25 |
 | kube-proxy mode | `iptables` — identical across all 25 |
 | Flows per trial | 10 TCP, 10 UDP |
