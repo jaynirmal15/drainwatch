@@ -266,9 +266,9 @@ behaviours produces the wire events the classifier expects — a drain puts an
 announcement on the wire before its FIN, and an abrupt exit does not.
 
 Those tests cannot cover kube-proxy, EndpointSlices or the grace-period boundary. Three
-defects in drainwatch were found only by running against a real cluster, and are recorded
-in commit `84c3c87` — including one where re-homed UDP flows were reported as having
-survived untouched.
+defects in drainwatch were found only by running against a real cluster — including one
+where re-homed UDP flows were reported as having survived untouched. They are described
+in [EXPERIMENTS.md](EXPERIMENTS.md).
 
 ## Licence
 
