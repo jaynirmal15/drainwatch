@@ -21,6 +21,24 @@ medians with their full observed range, computed by `drainwatch aggregate`.
 
 ---
 
+## Release and commit provenance
+
+Three commits matter, and they are deliberately not the same one:
+
+| | commit | what it is |
+| --- | --- | --- |
+| `v0.1.0` tag | `0e59101` | the released harness — an annotated tag, and what `git clone` plus `git checkout v0.1.0` gives you |
+| n=1 run | `d36d40d` | the commit the three-arm run below was recorded from, two commits before the tag |
+| n=5 matrix | `173d102` | the commit all 25 matrix trials were recorded from, ten commits after the tag |
+
+The tag sits between the two datasets because the work did: the n=1 run exposed defects
+that were fixed before tagging, and the matrix needed an aggregator and an endpoint-
+preflight fix that came after. Every report states its own `git_commit`, so no number
+here depends on knowing this table — it is here so that checking out `v0.1.0` and finding
+a tree that differs from either dataset is expected rather than alarming.
+
+---
+
 ## The question
 
 When a pod is deleted, three things happen at roughly the same time and in an order that
