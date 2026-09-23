@@ -135,6 +135,22 @@ bin/drainwatch run --out out
 make kind-down      # tear the cluster down
 ```
 
+### Installing the binary on its own
+
+```bash
+go install github.com/jaynirmal15/drainwatch/cmd/drainwatch@latest
+```
+
+If `drainwatch` isn't found after installing, add Go's bin directory to your PATH:
+
+```bash
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+`drainwatch run` still expects to be started from a clone: it reads
+`deploy/manifests/probe.yaml` from the working directory (override with `--manifest`), and
+the probe image it deploys is built by `make kind-up`.
+
 ### The three subcommands
 
 One binary.
